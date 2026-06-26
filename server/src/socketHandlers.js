@@ -115,29 +115,30 @@ function registerHandlers(io) {
 
     // ─── 4. STUDENT: SUBMIT ANSWER ───────────────────────────────────
     socket.on('student:submit-answer', (data, callback) => {
+      const safeCallback = typeof callback === 'function' ? callback : () => {};
       try {
         if (!data || !data.roomCode || data.answerIndex === undefined) {
-          return callback({ success: false, error: 'Room code and answer index are required' });
+          return safeCallback({ success: false, error: 'Room code and answer index are required' });
         }
 
         const { roomCode, answerIndex } = data;
         const room = getRoom(roomCode);
 
         if (!room) {
-          return callback({ success: false, error: 'Room not found' });
+          return safeCallback({ success: false, error: 'Room not found' });
         }
 
         if (room.status !== 'playing') {
-          return callback({ success: false, error: 'Game is not currently active' });
+          return safeCallback({ success: false, error: 'Game is not currently active' });
         }
 
         if (!room.players.has(socket.id)) {
-          return callback({ success: false, error: 'You are not in this room' });
+          return safeCallback({ success: false, error: 'You are not in this room' });
         }
 
         // Check if student already answered this question
         if (room.answeredSet.has(socket.id)) {
-          return callback({ success: false, error: 'You have already answered this question' });
+          return safeCallback({ success: false, error: 'You have already answered this question' });
         }
 
         // Mark as answered
@@ -148,7 +149,7 @@ function registerHandlers(io) {
 
         const currentQuestion = room.questions[room.currentQuestionIndex];
         if (!currentQuestion) {
-          return callback({ success: false, error: 'No active question' });
+          return safeCallback({ success: false, error: 'No active question' });
         }
 
         const isCorrect = answerIndex === currentQuestion.correctIndex;
@@ -166,10 +167,10 @@ function registerHandlers(io) {
         });
 
         console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${isCorrect ? 'correct' : 'wrong'} (+${score})`);
-        callback({ success: true, timeTaken });
+        safeCallback({ success: true, timeTaken });
       } catch (err) {
         console.error('[student:submit-answer] Error:', err);
-        callback({ success: false, error: 'Failed to submit answer' });
+        safeCallback({ success: false, error: 'Failed to submit answer' });
       }
     });
 
