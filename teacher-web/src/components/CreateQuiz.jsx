@@ -1,0 +1,240 @@
+import { useState, useCallback } from 'react';
+import socket from '../socket';
+
+const TIME_LIMITS = [10, 15, 20, 30];
+
+const OPTION_STYLES = [
+  { bg: 'option-red-ghost', label: 'A', color: '#e74c3c' },
+  { bg: 'option-blue-ghost', label: 'B', color: '#3498db' },
+  { bg: 'option-amber-ghost', label: 'C', color: '#f39c12' },
+  { bg: 'option-green-ghost', label: 'D', color: '#2ecc71' },
+];
+
+function createEmptyQuestion() {
+  return {
+    text: '',
+    options: ['', '', '', ''],
+    correctIndex: 0,
+    timeLimit: 20,
+  };
+}
+
+export default function CreateQuiz({ onRoomCreated }) {
+  const [questions, setQuestions] = useState([createEmptyQuestion()]);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState('');
+
+  const updateQuestion = useCallback((index, field, value) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }, []);
+
+  const updateOption = useCallback((qIndex, optIndex, value) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      const q = { ...updated[qIndex] };
+      q.options = [...q.options];
+      q.options[optIndex] = value;
+      updated[qIndex] = q;
+      return updated;
+    });
+  }, []);
+
+  const addQuestion = useCallback(() => {
+    setQuestions((prev) => [...prev, createEmptyQuestion()]);
+  }, []);
+
+  const removeQuestion = useCallback((index) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const validate = useCallback(() => {
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (!q.text.trim()) return `Question ${i + 1}: Please enter a question`;
+      for (let j = 0; j < q.options.length; j++) {
+        if (!q.options[j].trim()) return `Question ${i + 1}: Option ${String.fromCharCode(65 + j)} is empty`;
+      }
+    }
+    return '';
+  }, [questions]);
+
+  const handleCreateRoom = useCallback(() => {
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError('');
+    setIsCreating(true);
+
+    socket.connect();
+
+    socket.once('connect', () => {
+      socket.emit('host:create-room', { questions }, (response) => {
+        setIsCreating(false);
+        if (response?.roomCode) {
+          onRoomCreated(response.roomCode, questions);
+        }
+      });
+    });
+
+    // Timeout fallback
+    setTimeout(() => {
+      if (!socket.connected) {
+        setIsCreating(false);
+        setError('Could not connect to server. Please try again.');
+      }
+    }, 5000);
+  }, [questions, validate, onRoomCreated]);
+
+  return (
+    <div className="screen-enter min-h-screen p-4 md:p-8">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8 animate-fade-in-up">
+          <h1 className="text-4xl md:text-5xl font-extrabold gradient-text mb-2">
+            LiveQuizz
+          </h1>
+          <p className="text-[var(--text-muted)] text-lg">
+            Create your quiz and host a live session
+          </p>
+        </div>
+
+        {/* Questions */}
+        <div className="space-y-6">
+          {questions.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              className="glass-card p-5 md:p-6 animate-fade-in-up"
+              style={{ animationDelay: `${qIndex * 80}ms` }}
+            >
+              {/* Question Header */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-[var(--accent-primary)] tracking-wider uppercase">
+                  Question {qIndex + 1}
+                </span>
+                <div className="flex items-center gap-3">
+                  {/* Time Limit */}
+                  <select
+                    value={q.timeLimit}
+                    onChange={(e) =>
+                      updateQuestion(qIndex, 'timeLimit', Number(e.target.value))
+                    }
+                    className="input-field !w-auto !py-2 !px-3 text-sm cursor-pointer"
+                    aria-label={`Time limit for question ${qIndex + 1}`}
+                  >
+                    {TIME_LIMITS.map((t) => (
+                      <option key={t} value={t} style={{ background: '#1a1a2e' }}>
+                        {t}s
+                      </option>
+                    ))}
+                  </select>
+                  {/* Remove */}
+                  {questions.length > 1 && (
+                    <button
+                      className="btn-danger"
+                      onClick={() => removeQuestion(qIndex)}
+                      aria-label={`Remove question ${qIndex + 1}`}
+                    >
+                      ✕ Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Question Text */}
+              <input
+                type="text"
+                value={q.text}
+                onChange={(e) => updateQuestion(qIndex, 'text', e.target.value)}
+                placeholder="Enter your question..."
+                className="input-field text-lg mb-4 !py-3"
+                id={`question-text-${qIndex}`}
+              />
+
+              {/* Options Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {q.options.map((opt, optIndex) => (
+                  <div
+                    key={optIndex}
+                    className={`relative rounded-xl p-3 transition-all duration-200 ${OPTION_STYLES[optIndex].bg} ${
+                      q.correctIndex === optIndex
+                        ? 'ring-2 ring-white/30 shadow-lg'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Correct Answer Selector */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateQuestion(qIndex, 'correctIndex', optIndex)
+                        }
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 shrink-0 ${
+                          q.correctIndex === optIndex
+                            ? 'bg-white text-gray-900 shadow-md scale-110'
+                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        }`}
+                        aria-label={`Mark option ${OPTION_STYLES[optIndex].label} as correct for question ${qIndex + 1}`}
+                        title={
+                          q.correctIndex === optIndex
+                            ? 'Correct answer'
+                            : 'Set as correct'
+                        }
+                      >
+                        {q.correctIndex === optIndex ? '✓' : OPTION_STYLES[optIndex].label}
+                      </button>
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={(e) =>
+                          updateOption(qIndex, optIndex, e.target.value)
+                        }
+                        placeholder={`Option ${OPTION_STYLES[optIndex].label}`}
+                        className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 text-sm"
+                        id={`question-${qIndex}-option-${optIndex}`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center animate-fade-in">
+            {error}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 mb-12 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <button className="btn-ghost text-base" onClick={addQuestion}>
+            <span className="text-xl leading-none">+</span> Add Question
+          </button>
+          <button
+            className="btn-primary text-base px-10 py-3"
+            onClick={handleCreateRoom}
+            disabled={isCreating}
+            id="create-room-btn"
+          >
+            {isCreating ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>🚀 Create Room</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
