@@ -62,8 +62,7 @@ export default function GameOverScreen({
         }),
       ]),
     ]).start();
-
-
+  }, [fadeIn, rankSlide, trophyScale]);
 
   return (
     <SafeAreaView style={styles.container}>
