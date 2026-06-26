@@ -6,21 +6,6 @@ const PODIUM_CONFIG = [
   { rank: 3, label: '🥉', color: '#cd7f32', height: '80px', order: 3 },
 ];
 
-function ConfettiPiece({ index }) {
-  const style = useMemo(() => ({
-    position: 'absolute',
-    left: `${Math.random() * 100}%`,
-    top: '-10px',
-    width: `${6 + Math.random() * 8}px`,
-    height: `${6 + Math.random() * 8}px`,
-    borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-    background: ['#6c5ce7', '#e74c3c', '#f39c12', '#00b894', '#3498db', '#fd79a8'][index % 6],
-    animation: `confetti-fall ${2 + Math.random() * 3}s linear ${Math.random() * 2}s forwards`,
-    opacity: 0.8,
-  }), [index]);
-
-  return <div style={style} />;
-}
 
 function DeltaBadge({ delta }) {
   if (!delta || delta === 0) return null;
@@ -37,15 +22,7 @@ export default function Leaderboard({
   onNextQuestion,
   onBackHome,
 }) {
-  const [showConfetti, setShowConfetti] = useState(false);
 
-  useEffect(() => {
-    if (leaderboard.length > 0) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [leaderboard]);
 
   const top3 = leaderboard.slice(0, 3);
   const rest = leaderboard.slice(3);
@@ -58,23 +35,16 @@ export default function Leaderboard({
 
   return (
     <div className="screen-enter min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      {/* Confetti */}
-      {showConfetti && (
-        <div className="fixed inset-0 pointer-events-none z-50">
-          {Array.from({ length: 40 }).map((_, i) => (
-            <ConfettiPiece key={i} index={i} />
-          ))}
-        </div>
-      )}
+
 
       <div className="max-w-2xl w-full">
         {/* Title */}
         <div className="text-center mb-8 animate-slide-in-down">
           <h1 className="text-3xl md:text-4xl font-extrabold mb-1">
             {isGameOver ? (
-              <span className="gradient-text-gold">🏆 Final Standings</span>
+              <span className="text-[var(--text-primary)]">Final Standings</span>
             ) : (
-              <span className="gradient-text">📊 Leaderboard</span>
+              <span className="text-[var(--text-primary)]">Leaderboard</span>
             )}
           </h1>
           {isGameOver && (
@@ -154,7 +124,7 @@ export default function Leaderboard({
                       className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${barPercent}%`,
-                        background: 'linear-gradient(90deg, #6c5ce7, #a78bfa)',
+                        background: 'var(--text-primary)',
                       }}
                     />
                   </div>

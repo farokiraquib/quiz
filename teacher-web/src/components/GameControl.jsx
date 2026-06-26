@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 
 const OPTION_COLORS = [
-  { bg: '#e74c3c', label: 'A' },
-  { bg: '#3498db', label: 'B' },
-  { bg: '#f39c12', label: 'C' },
-  { bg: '#2ecc71', label: 'D' },
+  { bg: '#171717', label: 'A' },
+  { bg: '#171717', label: 'B' },
+  { bg: '#171717', label: 'C' },
+  { bg: '#171717', label: 'D' },
 ];
 
 export default function GameControl({
@@ -41,9 +41,18 @@ export default function GameControl({
     };
   }, [questionIndex, timeLimit]);
 
+  // Auto-end question when timer is done
+  useEffect(() => {
+    if (isTimerDone) {
+      onEndQuestion();
+    }
+  }, [isTimerDone, onEndQuestion]);
+
   const timerPercent = (timeLeft / timeLimit) * 100;
   const answerPercent = totalPlayers > 0 ? (answeredCount / totalPlayers) * 100 : 0;
   const isTimerCritical = timeLeft <= 5 && timeLeft > 0;
+  const allAnswered = totalPlayers > 0 && answeredCount === totalPlayers;
+  const showEndButton = allAnswered && !isTimerDone;
 
   return (
     <div className="screen-enter min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
@@ -82,12 +91,7 @@ export default function GameControl({
             className="h-full rounded-full transition-all duration-1000 linear"
             style={{
               width: `${timerPercent}%`,
-              background:
-                timeLeft <= 5
-                  ? 'linear-gradient(90deg, #e74c3c, #ff6b6b)'
-                  : timeLeft <= 10
-                  ? 'linear-gradient(90deg, #f39c12, #f1c40f)'
-                  : 'linear-gradient(90deg, #6c5ce7, #a78bfa)',
+              background: 'var(--text-primary)',
             }}
           />
         </div>
@@ -108,7 +112,7 @@ export default function GameControl({
               style={{
                 background: OPTION_COLORS[i].bg,
                 animationDelay: `${i * 80}ms`,
-                boxShadow: `0 4px 15px ${OPTION_COLORS[i].bg}33`,
+                border: '1px solid var(--border-subtle)',
               }}
             >
               <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm font-bold text-white shrink-0">
@@ -135,22 +139,24 @@ export default function GameControl({
               className="h-full rounded-full transition-all duration-300 ease-out"
               style={{
                 width: `${answerPercent}%`,
-                background: 'linear-gradient(90deg, #00b894, #55efc4)',
+                background: 'var(--text-primary)',
               }}
             />
           </div>
         </div>
 
         {/* End Question Button */}
-        <div className="text-center animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-          <button
-            className="btn-primary text-base px-8 py-3"
-            onClick={onEndQuestion}
-            id="end-question-btn"
-          >
-            {isTimerDone ? '📊 Show Results' : '⏹ End Question'}
-          </button>
-        </div>
+        {showEndButton && (
+          <div className="text-center animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <button
+              className="btn-primary text-base px-8 py-3"
+              onClick={onEndQuestion}
+              id="end-question-btn"
+            >
+              Show Results (Early)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

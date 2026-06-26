@@ -14,16 +14,15 @@ import {
 const { width } = Dimensions.get('window');
 
 const PODIUM_COLORS = {
-  1: { bg: 'rgba(255, 215, 0, 0.15)', border: '#FFD700', emoji: '🥇', label: 'Gold' },
-  2: { bg: 'rgba(192, 192, 192, 0.15)', border: '#C0C0C0', emoji: '🥈', label: 'Silver' },
-  3: { bg: 'rgba(205, 127, 50, 0.15)', border: '#CD7F32', emoji: '🥉', label: 'Bronze' },
+  1: { bg: '#171717', border: '#FFD700', emoji: '🥇', label: 'Gold' },
+  2: { bg: '#171717', border: '#C0C0C0', emoji: '🥈', label: 'Silver' },
+  3: { bg: '#171717', border: '#CD7F32', emoji: '🥉', label: 'Bronze' },
 };
 
 export default function GameOverScreen({
   finalLeaderboard,
   socketId,
   playerName,
-  onPlayAgain,
 }) {
   // Find player in leaderboard
   const playerEntry = finalLeaderboard?.find((entry) => entry.socketId === socketId);
@@ -38,14 +37,7 @@ export default function GameOverScreen({
   const fadeIn = useRef(new Animated.Value(0)).current;
   const trophyScale = useRef(new Animated.Value(0)).current;
   const rankSlide = useRef(new Animated.Value(60)).current;
-  const confettiAnims = useRef(
-    Array.from({ length: 8 }, () => ({
-      translateY: new Animated.Value(-20),
-      opacity: new Animated.Value(0),
-      translateX: new Animated.Value(0),
-    }))
-  ).current;
-  const buttonScale = useRef(new Animated.Value(0)).current;
+
 
   useEffect(() => {
     Animated.sequence([
@@ -69,87 +61,15 @@ export default function GameOverScreen({
           useNativeDriver: true,
         }),
       ]),
-      // Button
-      Animated.spring(buttonScale, {
-        toValue: 1,
-        friction: 5,
-        useNativeDriver: true,
-      }),
     ]).start();
 
-    // Confetti animation for top 3
-    if (isTopThree) {
-      confettiAnims.forEach((anim, i) => {
-        const xTarget = (Math.random() - 0.5) * width * 0.8;
-        Animated.loop(
-          Animated.sequence([
-            Animated.delay(i * 200),
-            Animated.parallel([
-              Animated.timing(anim.translateY, {
-                toValue: 600,
-                duration: 2000 + Math.random() * 1000,
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim.opacity, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim.translateX, {
-                toValue: xTarget,
-                duration: 2000 + Math.random() * 1000,
-                useNativeDriver: true,
-              }),
-            ]),
-            Animated.timing(anim.opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: true,
-            }),
-            // Reset
-            Animated.parallel([
-              Animated.timing(anim.translateY, {
-                toValue: -20,
-                duration: 0,
-                useNativeDriver: true,
-              }),
-              Animated.timing(anim.translateX, {
-                toValue: 0,
-                duration: 0,
-                useNativeDriver: true,
-              }),
-            ]),
-          ])
-        ).start();
-      });
-    }
-  }, []);
 
-  const confettiEmojis = ['🎊', '✨', '🌟', '🎉', '💫', '⭐', '🎆', '🎇'];
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
+      <StatusBar barStyle="light-content" backgroundColor="#0a0a0a" />
 
-      {/* Confetti particles */}
-      {isTopThree &&
-        confettiAnims.map((anim, i) => (
-          <Animated.Text
-            key={i}
-            style={[
-              styles.confetti,
-              {
-                opacity: anim.opacity,
-                transform: [
-                  { translateY: anim.translateY },
-                  { translateX: anim.translateX },
-                ],
-              },
-            ]}
-          >
-            {confettiEmojis[i]}
-          </Animated.Text>
-        ))}
+
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -209,7 +129,7 @@ export default function GameOverScreen({
             <Text
               style={[
                 styles.scoreNumber,
-                isTopThree && { color: podiumInfo?.border || '#6c5ce7' },
+                isTopThree && { color: podiumInfo?.border || '#fafafa' },
               ]}
             >
               #{playerRank}
@@ -269,16 +189,7 @@ export default function GameOverScreen({
           </Animated.View>
         )}
 
-        {/* Play Again button */}
-        <Animated.View style={{ transform: [{ scale: buttonScale }], marginTop: 28 }}>
-          <TouchableOpacity
-            style={styles.playAgainButton}
-            onPress={onPlayAgain}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.playAgainText}>🔄 Play Again</Text>
-          </TouchableOpacity>
-        </Animated.View>
+
       </ScrollView>
 
       {/* Background glow */}
@@ -290,7 +201,7 @@ export default function GameOverScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0a0a0a',
   },
   scrollContent: {
     flexGrow: 1,
@@ -299,21 +210,15 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 60,
   },
-  confetti: {
-    position: 'absolute',
-    top: -10,
-    alignSelf: 'center',
-    fontSize: 28,
-    zIndex: 10,
-  },
+
   trophyContainer: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   podiumCircle: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    borderWidth: 3,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -324,82 +229,78 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-    borderWidth: 3,
-    borderColor: '#6c5ce7',
+    backgroundColor: '#171717',
+    borderWidth: 1,
+    borderColor: '#262626',
     justifyContent: 'center',
     alignItems: 'center',
   },
   rankBig: {
     fontSize: 48,
-    fontWeight: '900',
-    color: '#6c5ce7',
+    fontWeight: '600',
+    color: '#fafafa',
   },
   title: {
-    fontSize: 38,
-    fontWeight: '900',
-    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#fafafa',
     textAlign: 'center',
     marginBottom: 8,
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#a0a0b8',
+    fontSize: 16,
+    color: '#737373',
     textAlign: 'center',
-    fontWeight: '500',
-    marginBottom: 32,
+    fontWeight: '400',
+    marginBottom: 40,
   },
   scoreCard: {
-    backgroundColor: '#16213e',
-    borderRadius: 20,
-    padding: 24,
-    width: Math.min(width - 48, 340),
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 32,
+    width: Math.min(width - 48, 380),
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.2)',
+    borderColor: '#262626',
     marginBottom: 24,
-    shadowColor: '#6c5ce7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 8,
   },
   scoreRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   scoreLabel: {
-    fontSize: 12,
-    color: '#a0a0b8',
-    fontWeight: '700',
-    letterSpacing: 2,
+    fontSize: 11,
+    color: '#737373',
+    fontWeight: '600',
+    letterSpacing: 1.5,
   },
   scoreNumber: {
     fontSize: 32,
-    fontWeight: '900',
-    color: '#ffffff',
+    fontWeight: '600',
+    color: '#fafafa',
   },
   scoreAccent: {
-    color: '#6c5ce7',
+    color: '#fafafa',
   },
   scoreDivider: {
     height: 1,
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-    marginVertical: 8,
+    backgroundColor: '#262626',
+    marginVertical: 12,
   },
   leaderboardCard: {
-    backgroundColor: '#16213e',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 24,
     width: Math.min(width - 48, 380),
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.15)',
+    borderColor: '#262626',
   },
   leaderboardTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fafafa',
     marginBottom: 16,
     textAlign: 'center',
   },
@@ -407,59 +308,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    marginBottom: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    marginBottom: 4,
+    backgroundColor: 'transparent',
   },
   lbRowMe: {
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
+    backgroundColor: '#171717',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.4)',
+    borderColor: '#262626',
   },
   lbRankText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#a0a0b8',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#737373',
     width: 40,
     textAlign: 'center',
   },
   lbName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontWeight: '500',
+    color: '#fafafa',
     flex: 1,
     marginLeft: 8,
   },
   lbNameMe: {
-    fontWeight: '800',
-    color: '#6c5ce7',
+    fontWeight: '600',
+    color: '#fafafa',
   },
   lbScore: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#a0a0b8',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#a3a3a3',
   },
   lbScoreMe: {
-    color: '#6c5ce7',
+    color: '#fafafa',
   },
-  playAgainButton: {
-    backgroundColor: '#6c5ce7',
-    borderRadius: 18,
-    paddingVertical: 20,
-    paddingHorizontal: 48,
-    shadowColor: '#6c5ce7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  playAgainText: {
-    color: '#ffffff',
-    fontSize: 22,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
+
   bgGlow: {
     position: 'absolute',
     bottom: -120,
@@ -467,8 +352,8 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: '#6c5ce7',
-    opacity: 0.08,
+    backgroundColor: '#fafafa',
+    opacity: 0,
     zIndex: -1,
   },
 });

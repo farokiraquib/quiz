@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const OPTION_COLORS = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71'];
+const OPTION_COLORS = ['#171717', '#171717', '#171717', '#171717'];
 const OPTION_ICONS = ['▲', '◆', '●', '■'];
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -25,7 +25,7 @@ export default function QuestionScreen({
 
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedIndices, setSelectedIndices] = useState([]);
   const hasAnsweredRef = useRef(false);
 
   // Animations
@@ -40,7 +40,7 @@ export default function QuestionScreen({
     // Reset state for new question
     hasAnsweredRef.current = false;
     setHasAnswered(false);
-    setSelectedIndex(null);
+    setSelectedIndices([]);
 
     // Entrance animations
     Animated.parallel([
@@ -59,10 +59,9 @@ export default function QuestionScreen({
       ...optionAnims.map((anim, i) =>
         Animated.sequence([
           Animated.delay(150 + i * 80),
-          Animated.spring(anim, {
+          Animated.timing(anim, {
             toValue: 1,
-            friction: 6,
-            tension: 50,
+            duration: 300,
             useNativeDriver: true,
           }),
         ])
@@ -98,61 +97,105 @@ export default function QuestionScreen({
 
   const handleOptionPress = useCallback(
     (answerIndex) => {
-      // CRITICAL: Prevent double-tap
+      // Prevent interactions if already answered
       if (hasAnsweredRef.current) return;
-      hasAnsweredRef.current = true;
-      setHasAnswered(true);
-      setSelectedIndex(answerIndex);
 
-      // Tap feedback animation
-      Animated.sequence([
-        Animated.timing(selectedScale, {
-          toValue: 0.9,
-          duration: 60,
-          useNativeDriver: true,
-        }),
-        Animated.spring(selectedScale, {
-          toValue: 1.05,
-          friction: 3,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      if (question.type === 'multiple') {
+        setSelectedIndices((prev) => {
+          if (prev.includes(answerIndex)) {
+            return prev.filter((i) => i !== answerIndex);
+          }
+          return [...prev, answerIndex];
+        });
+      } else {
+        // Single choice: auto-submit on tap
+        hasAnsweredRef.current = true;
+        setHasAnswered(true);
+        setSelectedIndices([answerIndex]);
 
-      // Start waiting pulse
-      Animated.loop(
+        // Tap feedback animation
         Animated.sequence([
-          Animated.timing(waitingPulse, {
+          Animated.timing(selectedScale, {
+            toValue: 0.98,
+            duration: 80,
+            useNativeDriver: true,
+          }),
+          Animated.spring(selectedScale, {
             toValue: 1,
-            duration: 800,
+            friction: 3,
             useNativeDriver: true,
           }),
-          Animated.timing(waitingPulse, {
-            toValue: 0.6,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
+        ]).start();
 
-      // Emit answer to server
-      socket.emit('student:submit-answer', {
-        roomCode,
-        answerIndex,
-      });
+        // Start waiting pulse
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(waitingPulse, {
+              toValue: 1,
+              duration: 800,
+              useNativeDriver: true,
+            }),
+            Animated.timing(waitingPulse, {
+              toValue: 0.6,
+              duration: 800,
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
 
-      if (onAnswerSubmitted) {
-        onAnswerSubmitted(answerIndex);
+        // Emit answer to server
+        socket.emit('student:submit-answer', {
+          roomCode,
+          answerIndices: [answerIndex],
+        });
+
+        if (onAnswerSubmitted) {
+          onAnswerSubmitted([answerIndex]);
+        }
       }
     },
-    [roomCode, socket, onAnswerSubmitted]
+    [question.type, roomCode, socket, onAnswerSubmitted, selectedScale, waitingPulse]
   );
+
+  const handleSubmitMultiple = useCallback(() => {
+    if (selectedIndices.length === 0 || hasAnsweredRef.current) return;
+
+    hasAnsweredRef.current = true;
+    setHasAnswered(true);
+
+    // Start waiting pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(waitingPulse, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(waitingPulse, {
+          toValue: 0.6,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Emit answer to server
+    socket.emit('student:submit-answer', {
+      roomCode,
+      answerIndices: selectedIndices,
+    });
+
+    if (onAnswerSubmitted) {
+      onAnswerSubmitted(selectedIndices);
+    }
+  }, [selectedIndices, roomCode, socket, onAnswerSubmitted, waitingPulse]);
 
   const timerColor =
     timeLeft > timeLimit * 0.5
-      ? '#2ecc71'
+      ? '#fafafa'
       : timeLeft > timeLimit * 0.25
-      ? '#f39c12'
-      : '#e74c3c';
+      ? '#a3a3a3'
+      : '#525252';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -205,7 +248,7 @@ export default function QuestionScreen({
         {/* Options grid */}
         <View style={styles.optionsGrid}>
           {options.map((option, index) => {
-            const isSelected = selectedIndex === index;
+            const isSelected = selectedIndices.includes(index);
             const animValue = optionAnims[index];
 
             return (
@@ -257,6 +300,18 @@ export default function QuestionScreen({
             );
           })}
         </View>
+
+        {/* Submit button for multiple choice */}
+        {question.type === 'multiple' && !hasAnswered && (
+          <TouchableOpacity
+            style={[styles.submitButton, selectedIndices.length === 0 && styles.submitButtonDisabled]}
+            onPress={handleSubmitMultiple}
+            disabled={selectedIndices.length === 0}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.submitButtonText}>Submit Answer</Text>
+          </TouchableOpacity>
+        )}
       </Animated.View>
     </SafeAreaView>
   );
@@ -267,78 +322,77 @@ const optionSize = (width - 56) / 2;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0a0a0a',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
   timerContainer: {
-    height: 6,
-    backgroundColor: '#0f1a30',
-    borderRadius: 3,
+    height: 4,
+    backgroundColor: '#171717',
+    borderRadius: 2,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   timerBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   timerTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   timerText: {
-    fontSize: 28,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '600',
+    letterSpacing: -0.5,
   },
   questionNumber: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#a0a0b8',
-    backgroundColor: '#16213e',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#737373',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    letterSpacing: 1,
   },
   questionContainer: {
-    backgroundColor: '#16213e',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    minHeight: 100,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 32,
+    marginBottom: 24,
+    minHeight: 120,
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.15)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    borderColor: '#262626',
   },
   questionText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: '500',
+    color: '#fafafa',
     textAlign: 'center',
-    lineHeight: 30,
+    lineHeight: 34,
+    letterSpacing: -0.5,
   },
   waitingBadge: {
     alignSelf: 'center',
-    backgroundColor: '#00b894',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 24,
-    marginBottom: 12,
+    backgroundColor: '#171717',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 100,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
   waitingText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800',
+    color: '#a3a3a3',
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   optionsGrid: {
     flex: 1,
@@ -346,41 +400,54 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignContent: 'center',
-    gap: 12,
+    gap: 16,
   },
   optionWrapper: {
     width: optionSize,
   },
   optionButton: {
-    height: Math.max(optionSize * 0.65, 80),
-    borderRadius: 18,
+    height: Math.max(optionSize * 0.7, 90),
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
   optionDimmed: {
-    opacity: 0.35,
+    opacity: 0.4,
   },
   optionSelected: {
-    borderWidth: 4,
-    borderColor: '#ffffff',
-    shadowColor: '#ffffff',
-    shadowOpacity: 0.5,
+    borderWidth: 1,
+    borderColor: '#fafafa',
+    backgroundColor: '#262626',
   },
   optionIcon: {
-    fontSize: 24,
-    color: 'rgba(255, 255, 255, 0.5)',
-    marginBottom: 6,
+    fontSize: 18,
+    color: '#737373',
+    marginBottom: 8,
   },
   optionText: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#e5e5e5',
     textAlign: 'center',
+    letterSpacing: -0.2,
+  },
+  submitButton: {
+    backgroundColor: '#fafafa',
+    borderRadius: 16,
+    paddingVertical: 18,
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#262626',
+    opacity: 0.5,
+  },
+  submitButtonText: {
+    color: '#0a0a0a',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

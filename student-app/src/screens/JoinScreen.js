@@ -82,7 +82,7 @@ export default function JoinScreen({ onJoined }) {
     // Button press animation
     Animated.sequence([
       Animated.timing(buttonScale, {
-        toValue: 0.92,
+        toValue: 0.98,
         duration: 80,
         useNativeDriver: true,
       }),
@@ -167,12 +167,13 @@ export default function JoinScreen({ onJoined }) {
             <TextInput
               style={styles.input}
               placeholder="Enter your name"
-              placeholderTextColor="#555577"
+              placeholderTextColor="#737373"
               value={playerName}
               onChangeText={setPlayerName}
               maxLength={20}
               autoCapitalize="words"
               returnKeyType="next"
+              selectionColor="#fafafa"
             />
           </View>
 
@@ -181,13 +182,14 @@ export default function JoinScreen({ onJoined }) {
             <TextInput
               style={[styles.input, styles.codeInput]}
               placeholder="000000"
-              placeholderTextColor="#555577"
+              placeholderTextColor="#737373"
               value={roomCode}
               onChangeText={(text) => setRoomCode(text.replace(/[^0-9]/g, ''))}
               keyboardType="number-pad"
               maxLength={6}
               returnKeyType="go"
               onSubmitEditing={handleJoin}
+              selectionColor="#fafafa"
             />
           </View>
 
@@ -196,10 +198,10 @@ export default function JoinScreen({ onJoined }) {
               style={[styles.joinButton, isJoining && styles.joinButtonDisabled]}
               onPress={handleJoin}
               disabled={isJoining}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
             >
               <Text style={styles.joinButtonText}>
-                {isJoining ? 'Joining...' : '🚀 Join Game'}
+                {isJoining ? 'Joining...' : 'Join Game'}
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -212,7 +214,7 @@ export default function JoinScreen({ onJoined }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0a0a0a',
   },
   keyboardView: {
     flex: 1,
@@ -227,14 +229,14 @@ const styles = StyleSheet.create({
   bgOrb1: {
     width: 300,
     height: 300,
-    backgroundColor: '#6c5ce7',
+    backgroundColor: '#171717',
     top: -80,
     right: -100,
   },
   bgOrb2: {
     width: 250,
     height: 250,
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#171717',
     bottom: -60,
     left: -80,
   },
@@ -242,80 +244,71 @@ const styles = StyleSheet.create({
     fontSize: 56,
     textAlign: 'center',
     marginBottom: 8,
+    display: 'none',
   },
   title: {
-    fontSize: 42,
-    fontWeight: '900',
-    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#fafafa',
     textAlign: 'center',
-    letterSpacing: 1,
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 18,
-    color: '#a0a0b8',
+    fontSize: 16,
+    color: '#737373',
     textAlign: 'center',
-    marginBottom: 32,
-    fontWeight: '500',
+    marginBottom: 40,
+    fontWeight: '400',
   },
   card: {
-    backgroundColor: '#16213e',
+    backgroundColor: '#0a0a0a',
     borderRadius: 24,
-    padding: 28,
+    padding: 32,
     width: Math.min(width - 48, 400),
-    shadowColor: '#6c5ce7',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 24,
-    elevation: 12,
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.2)',
+    borderColor: '#262626',
   },
   inputWrapper: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6c5ce7',
-    marginBottom: 8,
-    letterSpacing: 2,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#737373',
+    marginBottom: 12,
+    letterSpacing: 1.5,
   },
   input: {
-    backgroundColor: '#0f1a30',
-    borderRadius: 14,
-    paddingHorizontal: 18,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    paddingHorizontal: 16,
     paddingVertical: 16,
-    fontSize: 18,
-    color: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: 'rgba(108, 92, 231, 0.15)',
-    fontWeight: '600',
+    fontSize: 16,
+    color: '#fafafa',
+    borderWidth: 1,
+    borderColor: '#262626',
+    fontWeight: '500',
   },
   codeInput: {
-    fontSize: 28,
+    fontSize: 24,
     textAlign: 'center',
-    letterSpacing: 12,
-    fontWeight: '800',
+    letterSpacing: 8,
+    fontWeight: '500',
   },
   joinButton: {
-    backgroundColor: '#6c5ce7',
-    borderRadius: 16,
-    paddingVertical: 18,
+    backgroundColor: '#fafafa',
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#6c5ce7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
   },
   joinButtonDisabled: {
     opacity: 0.6,
   },
   joinButtonText: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    color: '#0a0a0a',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: -0.2,
   },
 });

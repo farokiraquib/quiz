@@ -24,7 +24,7 @@ export default function Lobby({ roomCode, players, onStart }) {
             title="Click to copy"
           >
             <h1
-              className="text-6xl md:text-8xl font-extrabold tracking-[0.2em] gradient-text select-all"
+              className="text-6xl md:text-8xl font-semibold tracking-[0.2em] text-[var(--text-primary)] select-all"
               style={{ letterSpacing: '0.25em' }}
               id="room-code-display"
             >
@@ -64,7 +64,6 @@ export default function Lobby({ roomCode, players, onStart }) {
         >
           {players.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <div className="text-4xl mb-3 opacity-40">👥</div>
               <p className="text-[var(--text-dimmed)] text-sm">
                 Waiting for students to join...
               </p>
@@ -77,9 +76,10 @@ export default function Lobby({ roomCode, players, onStart }) {
                   className="animate-badge-enter px-4 py-2 rounded-full text-sm font-medium"
                   style={{
                     animationDelay: `${index * 60}ms`,
-                    background: `hsl(${(index * 47 + 200) % 360}, 60%, 45%)`,
-                    color: 'white',
-                    boxShadow: `0 2px 10px hsla(${(index * 47 + 200) % 360}, 60%, 45%, 0.3)`,
+                    background: 'var(--bg-surface-hover)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    boxShadow: 'none',
                   }}
                 >
                   {player.name || player}
@@ -100,7 +100,7 @@ export default function Lobby({ roomCode, players, onStart }) {
             {players.length < 1 ? (
               'Waiting for students...'
             ) : (
-              <>▶ Start Quiz</>
+              <>Start Quiz</>
             )}
           </button>
         </div>

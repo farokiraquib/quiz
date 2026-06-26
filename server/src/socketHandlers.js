@@ -98,7 +98,7 @@ function registerHandlers(io) {
         const question = room.questions[room.currentQuestionIndex];
         if (!question) return;
 
-        // Broadcast question WITHOUT correctIndex
+        // Broadcast question WITHOUT correctIndices
         io.to(data.roomCode).emit('question:new', {
           questionIndex: room.currentQuestionIndex,
           text: question.text,
@@ -117,11 +117,11 @@ function registerHandlers(io) {
     socket.on('student:submit-answer', (data, callback) => {
       const safeCallback = typeof callback === 'function' ? callback : () => {};
       try {
-        if (!data || !data.roomCode || data.answerIndex === undefined) {
-          return safeCallback({ success: false, error: 'Room code and answer index are required' });
+        if (!data || !data.roomCode || data.answerIndices === undefined) {
+          return safeCallback({ success: false, error: 'Room code and answer indices are required' });
         }
 
-        const { roomCode, answerIndex } = data;
+        const { roomCode, answerIndices } = data;
         const room = getRoom(roomCode);
 
         if (!room) {
@@ -152,7 +152,14 @@ function registerHandlers(io) {
           return safeCallback({ success: false, error: 'No active question' });
         }
 
-        const isCorrect = answerIndex === currentQuestion.correctIndex;
+        // Handle both single (legacy) and multiple choice formats
+        const correct = currentQuestion.correctIndices || [currentQuestion.correctIndex];
+        const submitted = Array.isArray(answerIndices) ? answerIndices : [answerIndices];
+        
+        // Arrays must have the same length and all submitted elements must be in correct array
+        const isCorrect = correct.length === submitted.length && 
+                          submitted.every(val => correct.includes(val));
+
         const maxTimeMs = currentQuestion.timeLimit * 1000;
         const score = calculateScore(isCorrect, timeTaken, maxTimeMs);
 
@@ -190,7 +197,7 @@ function registerHandlers(io) {
         const leaderboard = buildLeaderboard(room);
 
         io.to(data.roomCode).emit('question:result', {
-          correctIndex: currentQuestion.correctIndex,
+          correctIndices: currentQuestion.correctIndices || [currentQuestion.correctIndex],
           leaderboard,
         });
 

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const OPTION_COLORS = ['#e74c3c', '#3498db', '#f39c12', '#2ecc71'];
+const OPTION_COLORS = ['#171717', '#171717', '#171717', '#171717'];
 
 export default function ResultScreen({
   questionResult,
@@ -96,12 +96,12 @@ export default function ResultScreen({
     <SafeAreaView
       style={[
         styles.container,
-        { backgroundColor: isCorrect ? '#0a2e1f' : '#2e0a0a' },
+        { backgroundColor: '#0a0a0a' },
       ]}
     >
       <StatusBar
         barStyle="light-content"
-        backgroundColor={isCorrect ? '#0a2e1f' : '#2e0a0a'}
+        backgroundColor="#0a0a0a"
       />
 
       <ScrollView
@@ -124,10 +124,8 @@ export default function ResultScreen({
             style={[
               styles.iconCircle,
               {
-                backgroundColor: isCorrect
-                  ? 'rgba(0, 184, 148, 0.2)'
-                  : 'rgba(225, 112, 85, 0.2)',
-                borderColor: isCorrect ? '#00b894' : '#e17055',
+                backgroundColor: '#171717',
+                borderColor: '#262626',
               },
             ]}
           >
@@ -142,7 +140,7 @@ export default function ResultScreen({
           <Text
             style={[
               styles.resultTitle,
-              { color: isCorrect ? '#00b894' : '#e17055' },
+              { color: '#fafafa' },
             ]}
           >
             {!didAnswer ? "Time's Up!" : isCorrect ? 'Correct!' : 'Not Quite!'}
@@ -155,7 +153,7 @@ export default function ResultScreen({
                 <View
                   style={[
                     styles.correctColorDot,
-                    { backgroundColor: OPTION_COLORS[correctIndex] || '#6c5ce7' },
+                    { backgroundColor: '#fafafa' },
                   ]}
                 />
                 <Text style={styles.correctAnswerText}>{correctAnswerText}</Text>
@@ -245,39 +243,40 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   iconContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 3,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconEmoji: {
-    fontSize: 56,
+    fontSize: 48,
   },
   resultTitle: {
-    fontSize: 38,
-    fontWeight: '900',
+    fontSize: 32,
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    letterSpacing: -1,
   },
   correctAnswerCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 16,
-    padding: 18,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 24,
     alignItems: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: '#262626',
   },
   correctLabel: {
-    fontSize: 13,
-    color: '#a0a0b8',
+    fontSize: 11,
+    color: '#737373',
     fontWeight: '600',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: 10,
     textTransform: 'uppercase',
   },
@@ -287,14 +286,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   correctColorDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   correctAnswerText: {
     fontSize: 20,
-    color: '#ffffff',
-    fontWeight: '800',
+    color: '#fafafa',
+    fontWeight: '600',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -302,90 +301,90 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   statCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 24,
     alignItems: 'center',
     flex: 1,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: '#262626',
   },
   statCardAccent: {
-    backgroundColor: 'rgba(108, 92, 231, 0.15)',
-    borderColor: 'rgba(108, 92, 231, 0.3)',
+    backgroundColor: '#0a0a0a',
+    borderColor: '#262626',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#a0a0b8',
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 6,
+    fontSize: 11,
+    color: '#737373',
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    marginBottom: 8,
   },
   statValue: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '600',
+    color: '#fafafa',
   },
   scoreValue: {
-    color: '#6c5ce7',
+    color: '#fafafa',
   },
   leaderboardCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 24,
+    padding: 24,
     width: Math.min(width - 48, 380),
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: '#262626',
   },
   leaderboardTitle: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#ffffff',
+    fontWeight: '600',
+    color: '#fafafa',
     marginBottom: 16,
     textAlign: 'center',
   },
   leaderboardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     marginBottom: 4,
   },
   leaderboardRowMe: {
-    backgroundColor: 'rgba(108, 92, 231, 0.2)',
+    backgroundColor: '#171717',
     borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.4)',
+    borderColor: '#262626',
   },
   leaderboardRank: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#a0a0b8',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#737373',
     width: 36,
   },
   leaderboardName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontWeight: '500',
+    color: '#fafafa',
     flex: 1,
   },
   leaderboardNameMe: {
-    fontWeight: '800',
-    color: '#6c5ce7',
+    fontWeight: '600',
+    color: '#fafafa',
   },
   leaderboardScore: {
     fontSize: 16,
-    fontWeight: '800',
-    color: '#a0a0b8',
+    fontWeight: '600',
+    color: '#a3a3a3',
   },
   leaderboardScoreMe: {
-    color: '#6c5ce7',
+    color: '#fafafa',
   },
   waitingHint: {
     fontSize: 14,
-    color: '#555577',
-    marginTop: 28,
-    fontWeight: '500',
+    color: '#737373',
+    marginTop: 32,
+    fontWeight: '400',
   },
   bgGlow: {
     position: 'absolute',
@@ -394,7 +393,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    opacity: 0.08,
+    opacity: 0,
     zIndex: -1,
   },
 });

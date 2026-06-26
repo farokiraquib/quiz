@@ -26,7 +26,11 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "serverUrl": "SERVER_URL_PLACEHOLDER"
-    }
+      "serverUrl": "https://quiz-pem6.onrender.com",
+      "eas": {
+        "projectId": "6d071cd7-68db-484f-a638-9051401fb974"
+      }
+    },
+    "owner": "raquib0077"
   }
 }

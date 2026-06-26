@@ -12,9 +12,10 @@ const OPTION_STYLES = [
 
 function createEmptyQuestion() {
   return {
+    type: 'single', // 'single' or 'multiple'
     text: '',
     options: ['', '', '', ''],
-    correctIndex: 0,
+    correctIndices: [0],
     timeLimit: 20,
   };
 }
@@ -96,7 +97,7 @@ export default function CreateQuiz({ onRoomCreated }) {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <h1 className="text-4xl md:text-5xl font-extrabold gradient-text mb-2">
+          <h1 className="text-4xl md:text-5xl font-semibold text-[var(--text-primary)] mb-2 tracking-tight">
             LiveQuizz
           </h1>
           <p className="text-[var(--text-muted)] text-lg">
@@ -114,25 +115,45 @@ export default function CreateQuiz({ onRoomCreated }) {
             >
               {/* Question Header */}
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-[var(--accent-primary)] tracking-wider uppercase">
+                <span className="text-sm font-semibold text-[var(--text-muted)] tracking-wider uppercase">
                   Question {qIndex + 1}
                 </span>
                 <div className="flex items-center gap-3">
-                  {/* Time Limit */}
+                  {/* Question Type */}
                   <select
-                    value={q.timeLimit}
-                    onChange={(e) =>
-                      updateQuestion(qIndex, 'timeLimit', Number(e.target.value))
-                    }
+                    value={q.type}
+                    onChange={(e) => {
+                      const newType = e.target.value;
+                      updateQuestion(qIndex, 'type', newType);
+                      // If switching to single, ensure only one correct answer
+                      if (newType === 'single' && q.correctIndices.length > 1) {
+                        updateQuestion(qIndex, 'correctIndices', [q.correctIndices[0]]);
+                      } else if (q.correctIndices.length === 0) {
+                        updateQuestion(qIndex, 'correctIndices', [0]);
+                      }
+                    }}
                     className="input-field !w-auto !py-2 !px-3 text-sm cursor-pointer"
-                    aria-label={`Time limit for question ${qIndex + 1}`}
+                    aria-label={`Question type for question ${qIndex + 1}`}
                   >
-                    {TIME_LIMITS.map((t) => (
-                      <option key={t} value={t} style={{ background: '#1a1a2e' }}>
-                        {t}s
-                      </option>
-                    ))}
+                    <option value="single" style={{ background: '#0a0a0a' }}>Single Choice</option>
+                    <option value="multiple" style={{ background: '#0a0a0a' }}>Multiple Choice</option>
                   </select>
+                  
+                  {/* Time Limit */}
+                  <div className="flex items-center bg-[#0a0a0a] border border-[var(--border-subtle)] rounded-md px-2">
+                    <input
+                      type="number"
+                      min="5"
+                      max="300"
+                      value={q.timeLimit}
+                      onChange={(e) =>
+                        updateQuestion(qIndex, 'timeLimit', Number(e.target.value))
+                      }
+                      className="bg-transparent text-white w-12 py-2 outline-none text-center text-sm"
+                      aria-label={`Time limit for question ${qIndex + 1}`}
+                    />
+                    <span className="text-sm text-[var(--text-muted)]">s</span>
+                  </div>
                   {/* Remove */}
                   {questions.length > 1 && (
                     <button
@@ -162,7 +183,7 @@ export default function CreateQuiz({ onRoomCreated }) {
                   <div
                     key={optIndex}
                     className={`relative rounded-xl p-3 transition-all duration-200 ${OPTION_STYLES[optIndex].bg} ${
-                      q.correctIndex === optIndex
+                      q.correctIndices.includes(optIndex)
                         ? 'ring-2 ring-white/30 shadow-lg'
                         : ''
                     }`}
@@ -171,22 +192,31 @@ export default function CreateQuiz({ onRoomCreated }) {
                       {/* Correct Answer Selector */}
                       <button
                         type="button"
-                        onClick={() =>
-                          updateQuestion(qIndex, 'correctIndex', optIndex)
-                        }
+                        onClick={() => {
+                          if (q.type === 'single') {
+                            updateQuestion(qIndex, 'correctIndices', [optIndex]);
+                          } else {
+                            const newIndices = q.correctIndices.includes(optIndex)
+                              ? q.correctIndices.filter(i => i !== optIndex)
+                              : [...q.correctIndices, optIndex];
+                            if (newIndices.length > 0) {
+                              updateQuestion(qIndex, 'correctIndices', newIndices);
+                            }
+                          }
+                        }}
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-200 shrink-0 ${
-                          q.correctIndex === optIndex
+                          q.correctIndices.includes(optIndex)
                             ? 'bg-white text-gray-900 shadow-md scale-110'
                             : 'bg-white/10 text-white/60 hover:bg-white/20'
                         }`}
                         aria-label={`Mark option ${OPTION_STYLES[optIndex].label} as correct for question ${qIndex + 1}`}
                         title={
-                          q.correctIndex === optIndex
+                          q.correctIndices.includes(optIndex)
                             ? 'Correct answer'
                             : 'Set as correct'
                         }
                       >
-                        {q.correctIndex === optIndex ? '✓' : OPTION_STYLES[optIndex].label}
+                        {q.correctIndices.includes(optIndex) ? '✓' : OPTION_STYLES[optIndex].label}
                       </button>
                       <input
                         type="text"
@@ -230,7 +260,7 @@ export default function CreateQuiz({ onRoomCreated }) {
                 Connecting...
               </>
             ) : (
-              <>🚀 Create Room</>
+              <>Create Room</>
             )}
           </button>
         </div>
