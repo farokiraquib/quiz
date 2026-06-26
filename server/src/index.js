@@ -12,9 +12,7 @@ const PORT = process.env.PORT || 3001;
 const app = express();
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',   // Vite dev server (React dashboard)
-  ],
+  origin: true, // Automatically reflect the request origin
   methods: ['GET', 'POST'],
   credentials: true,
 }));
@@ -31,7 +29,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow all origins (for Expo and other clients)
+    origin: true, // Automatically reflect the request origin
     methods: ['GET', 'POST'],
     credentials: true,
   },
