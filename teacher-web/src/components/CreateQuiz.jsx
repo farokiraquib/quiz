@@ -14,7 +14,14 @@ function createEmptyQuestion() {
   return {
     type: 'single', // 'single' or 'multiple'
     text: '',
-    options: ['', '', '', ''],
+    imageUrl: null,
+    imageId: null,
+    options: [
+      { text: '', imageUrl: null, imageId: null },
+      { text: '', imageUrl: null, imageId: null },
+      { text: '', imageUrl: null, imageId: null },
+      { text: '', imageUrl: null, imageId: null },
+    ],
     correctIndices: [0],
     timeLimit: 20,
   };
@@ -22,8 +29,11 @@ function createEmptyQuestion() {
 
 export default function CreateQuiz({ onRoomCreated }) {
   const [questions, setQuestions] = useState([createEmptyQuestion()]);
+  const [customRoomCode, setCustomRoomCode] = useState('');
+  const [password, setPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   const updateQuestion = useCallback((index, field, value) => {
     setQuestions((prev) => {
@@ -33,16 +43,39 @@ export default function CreateQuiz({ onRoomCreated }) {
     });
   }, []);
 
-  const updateOption = useCallback((qIndex, optIndex, value) => {
+  const updateOption = useCallback((qIndex, optIndex, field, value) => {
     setQuestions((prev) => {
       const updated = [...prev];
       const q = { ...updated[qIndex] };
       q.options = [...q.options];
-      q.options[optIndex] = value;
+      q.options[optIndex] = { ...q.options[optIndex], [field]: value };
       updated[qIndex] = q;
       return updated;
     });
   }, []);
+
+  const handleImageUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    setIsUploading(true);
+    try {
+      const res = await fetch('http://localhost:3001/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      setIsUploading(false);
+      if (data.success) {
+        return { imageUrl: data.imageUrl, imageId: data.imageId };
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err) {
+      setIsUploading(false);
+      alert('Failed to upload image');
+      return null;
+    }
+  };
 
   const addQuestion = useCallback(() => {
     setQuestions((prev) => [...prev, createEmptyQuestion()]);
@@ -53,15 +86,18 @@ export default function CreateQuiz({ onRoomCreated }) {
   }, []);
 
   const validate = useCallback(() => {
+    if (customRoomCode && !/^[A-Za-z0-9]+$/.test(customRoomCode)) {
+      return 'Room code must be alphanumeric';
+    }
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) return `Question ${i + 1}: Please enter a question`;
       for (let j = 0; j < q.options.length; j++) {
-        if (!q.options[j].trim()) return `Question ${i + 1}: Option ${String.fromCharCode(65 + j)} is empty`;
+        if (!q.options[j].text.trim()) return `Question ${i + 1}: Option ${String.fromCharCode(65 + j)} is empty`;
       }
     }
     return '';
-  }, [questions]);
+  }, [questions, customRoomCode]);
 
   const handleCreateRoom = useCallback(() => {
     const validationError = validate();
@@ -75,10 +111,12 @@ export default function CreateQuiz({ onRoomCreated }) {
     socket.connect();
 
     socket.once('connect', () => {
-      socket.emit('host:create-room', { questions }, (response) => {
+      socket.emit('host:create-room', { questions, customRoomCode, password }, (response) => {
         setIsCreating(false);
         if (response?.roomCode) {
-          onRoomCreated(response.roomCode, questions);
+          onRoomCreated(response.roomCode, response.hostSecret, questions);
+        } else {
+          setError(response?.error || 'Failed to create room');
         }
       });
     });
@@ -90,7 +128,7 @@ export default function CreateQuiz({ onRoomCreated }) {
         setError('Could not connect to server. Please try again.');
       }
     }, 5000);
-  }, [questions, validate, onRoomCreated]);
+  }, [questions, validate, onRoomCreated, customRoomCode, password]);
 
   return (
     <div className="screen-enter min-h-screen p-4 md:p-8">
@@ -103,6 +141,27 @@ export default function CreateQuiz({ onRoomCreated }) {
           <p className="text-[var(--text-muted)] text-lg">
             Create your quiz and host a live session
           </p>
+        </div>
+
+        {/* Room Settings */}
+        <div className="glass-card p-5 md:p-6 mb-6 animate-fade-in-up">
+          <h2 className="text-lg font-semibold text-white mb-4">Room Settings (Optional)</h2>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <input
+              type="text"
+              placeholder="Custom Room Code"
+              value={customRoomCode}
+              onChange={(e) => setCustomRoomCode(e.target.value.trim().toUpperCase())}
+              className="input-field flex-1"
+            />
+            <input
+              type="text"
+              placeholder="Room Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input-field flex-1"
+            />
+          </div>
         </div>
 
         {/* Questions */}
@@ -168,14 +227,49 @@ export default function CreateQuiz({ onRoomCreated }) {
               </div>
 
               {/* Question Text */}
-              <input
-                type="text"
-                value={q.text}
-                onChange={(e) => updateQuestion(qIndex, 'text', e.target.value)}
-                placeholder="Enter your question..."
-                className="input-field text-lg mb-4 !py-3"
-                id={`question-text-${qIndex}`}
-              />
+              <div className="flex flex-col gap-2 mb-4">
+                <input
+                  type="text"
+                  value={q.text}
+                  onChange={(e) => updateQuestion(qIndex, 'text', e.target.value)}
+                  placeholder="Enter your question..."
+                  className="input-field text-lg !py-3"
+                  id={`question-text-${qIndex}`}
+                />
+                
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id={`question-img-${qIndex}`}
+                    className="hidden"
+                    onChange={async (e) => {
+                      if (e.target.files[0]) {
+                        const res = await handleImageUpload(e.target.files[0]);
+                        if (res) {
+                          updateQuestion(qIndex, 'imageUrl', res.imageUrl);
+                          updateQuestion(qIndex, 'imageId', res.imageId);
+                        }
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor={`question-img-${qIndex}`}
+                    className="text-sm bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded cursor-pointer transition-colors"
+                  >
+                    {q.imageUrl ? 'Change Image' : 'Add Image'}
+                  </label>
+                  {q.imageUrl && (
+                    <img src={q.imageUrl} alt="Question" className="h-8 rounded" />
+                  )}
+                  {q.imageUrl && (
+                    <button onClick={() => {
+                      updateQuestion(qIndex, 'imageUrl', null);
+                      updateQuestion(qIndex, 'imageId', null);
+                    }} className="text-red-400 text-xs">Remove</button>
+                  )}
+                </div>
+              </div>
 
               {/* Options Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -218,16 +312,50 @@ export default function CreateQuiz({ onRoomCreated }) {
                       >
                         {q.correctIndices.includes(optIndex) ? '✓' : OPTION_STYLES[optIndex].label}
                       </button>
-                      <input
-                        type="text"
-                        value={opt}
-                        onChange={(e) =>
-                          updateOption(qIndex, optIndex, e.target.value)
-                        }
-                        placeholder={`Option ${OPTION_STYLES[optIndex].label}`}
-                        className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 text-sm"
-                        id={`question-${qIndex}-option-${optIndex}`}
-                      />
+                      <div className="flex-1 flex flex-col gap-1">
+                        <input
+                          type="text"
+                          value={opt.text}
+                          onChange={(e) =>
+                            updateOption(qIndex, optIndex, 'text', e.target.value)
+                          }
+                          placeholder={`Option ${OPTION_STYLES[optIndex].label}`}
+                          className="w-full bg-transparent border-none outline-none text-white placeholder-white/40 text-sm"
+                          id={`question-${qIndex}-option-${optIndex}`}
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id={`opt-img-${qIndex}-${optIndex}`}
+                            className="hidden"
+                            onChange={async (e) => {
+                              if (e.target.files[0]) {
+                                const res = await handleImageUpload(e.target.files[0]);
+                                if (res) {
+                                  updateOption(qIndex, optIndex, 'imageUrl', res.imageUrl);
+                                  updateOption(qIndex, optIndex, 'imageId', res.imageId);
+                                }
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`opt-img-${qIndex}-${optIndex}`}
+                            className="text-[10px] bg-black/20 hover:bg-black/40 text-white/80 px-2 py-1 rounded cursor-pointer transition-colors"
+                          >
+                            {opt.imageUrl ? 'Change Img' : '+ Img'}
+                          </label>
+                          {opt.imageUrl && (
+                            <img src={opt.imageUrl} alt="Opt" className="h-4 rounded" />
+                          )}
+                          {opt.imageUrl && (
+                            <button onClick={() => {
+                              updateOption(qIndex, optIndex, 'imageUrl', null);
+                              updateOption(qIndex, optIndex, 'imageId', null);
+                            }} className="text-red-400 text-[10px]">✕</button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -251,7 +379,7 @@ export default function CreateQuiz({ onRoomCreated }) {
           <button
             className="btn-primary text-base px-10 py-3"
             onClick={handleCreateRoom}
-            disabled={isCreating}
+            disabled={isCreating || isUploading}
             id="create-room-btn"
           >
             {isCreating ? (
@@ -259,6 +387,8 @@ export default function CreateQuiz({ onRoomCreated }) {
                 <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Connecting...
               </>
+            ) : isUploading ? (
+              <>Uploading Images...</>
             ) : (
               <>Create Room</>
             )}

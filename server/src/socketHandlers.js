@@ -7,6 +7,7 @@ const {
   removePlayer,
   removeRoom,
   findRoomBySocket,
+  getActiveRooms,
 } = require('./gameState');
 
 const { calculateScore, buildLeaderboard } = require('./leaderboard');
@@ -26,14 +27,82 @@ function registerHandlers(io) {
           return callback({ success: false, error: 'Questions array is required' });
         }
 
-        const roomCode = createRoom(socket.id, data.questions);
+        const { code: roomCode, hostSecret } = createRoom(
+          socket.id, 
+          data.questions, 
+          data.customRoomCode, 
+          data.password
+        );
         socket.join(roomCode);
 
         console.log(`[Room] Created: ${roomCode} by host ${socket.id}`);
-        callback({ success: true, roomCode });
+        callback({ success: true, roomCode, hostSecret });
       } catch (err) {
         console.error('[host:create-room] Error:', err);
         callback({ success: false, error: 'Failed to create room' });
+      }
+    });
+
+    // ─── 1.5. HOST: REJOIN ROOM ──────────────────────────────────────
+    socket.on('host:rejoin-room', (data, callback) => {
+      try {
+        if (!data || !data.roomCode || !data.hostSecret) return callback({ success: false });
+        
+        const room = getRoom(data.roomCode);
+        if (!room) return callback({ success: false, error: 'Room not found' });
+        
+        if (room.hostSecret !== data.hostSecret) {
+          return callback({ success: false, error: 'Invalid host secret' });
+        }
+
+        // Reassign host socket id
+        room.hostSocketId = socket.id;
+        socket.join(data.roomCode);
+        
+        console.log(`[Room ${data.roomCode}] Host rejoined with socket ${socket.id}`);
+        callback({ success: true, room });
+      } catch (err) {
+        console.error('[host:rejoin-room] Error:', err);
+        callback({ success: false });
+      }
+    });
+
+    // ─── 1.6. HOST: UPDATE QUESTIONS ──────────────────────────────────
+    socket.on('host:update-questions', (data, callback) => {
+      try {
+        if (!data || !data.roomCode || !data.questions) return;
+        const room = getRoom(data.roomCode);
+        if (!room || room.hostSocketId !== socket.id) return;
+        
+        room.questions = data.questions;
+        console.log(`[Room ${data.roomCode}] Questions updated`);
+        if (typeof callback === 'function') callback({ success: true });
+      } catch (err) {
+        console.error('[host:update-questions] Error:', err);
+      }
+    });
+
+    // ─── 1.7. HOST: END GAME EXPLICITLY ───────────────────────────────
+    socket.on('host:end-game', (data) => {
+      try {
+        if (!data || !data.roomCode) return;
+        const room = getRoom(data.roomCode);
+        if (!room || room.hostSocketId !== socket.id) return;
+        
+        io.to(data.roomCode).emit('room:host-disconnected', {
+          message: 'The host has ended the game.',
+        });
+        removeRoom(data.roomCode);
+        console.log(`[Room ${data.roomCode}] Game ended by host, room destroyed`);
+      } catch (err) {
+        console.error('[host:end-game] Error:', err);
+      }
+    });
+
+    // ─── 1.8. STUDENT: GET ACTIVE ROOMS ───────────────────────────────
+    socket.on('student:get-active-rooms', (callback) => {
+      if (typeof callback === 'function') {
+        callback({ success: true, rooms: getActiveRooms() });
       }
     });
 
@@ -51,8 +120,8 @@ function registerHandlers(io) {
           return callback({ success: false, error: 'Room not found' });
         }
 
-        if (room.status !== 'lobby') {
-          return callback({ success: false, error: 'Game has already started' });
+        if (room.password && room.password !== data.password) {
+          return callback({ success: false, error: 'Incorrect password' });
         }
 
         // Check for duplicate socket joining
@@ -75,7 +144,35 @@ function registerHandlers(io) {
         });
 
         console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${room.players.size}`);
-        callback({ success: true, roomCode });
+        
+        // Extract all image URLs for preloading
+        const imageUrls = [];
+        room.questions.forEach(q => {
+          if (q.imageUrl) imageUrls.push(q.imageUrl);
+          if (q.options) {
+            q.options.forEach(opt => {
+              if (opt && opt.imageUrl) imageUrls.push(opt.imageUrl);
+            });
+          }
+        });
+
+        callback({ success: true, roomCode, status: room.status, imageUrls });
+
+        // If game is playing, send the current question to the new student
+        if (room.status === 'playing') {
+          const question = room.questions[room.currentQuestionIndex];
+          if (question) {
+            socket.emit('question:new', {
+              questionIndex: room.currentQuestionIndex,
+              type: question.type,
+              text: question.text,
+              imageUrl: question.imageUrl,
+              options: question.options,
+              timeLimit: question.timeLimit,
+              serverStartTime: room.questionStartTime,
+            });
+          }
+        }
       } catch (err) {
         console.error('[student:join-room] Error:', err);
         callback({ success: false, error: 'Failed to join room' });
@@ -103,6 +200,7 @@ function registerHandlers(io) {
           questionIndex: room.currentQuestionIndex,
           type: question.type,
           text: question.text,
+          imageUrl: question.imageUrl,
           options: question.options,
           timeLimit: question.timeLimit,
           serverStartTime: room.questionStartTime,
@@ -250,6 +348,7 @@ function registerHandlers(io) {
             questionIndex: room.currentQuestionIndex,
             type: question.type,
             text: question.text,
+            imageUrl: question.imageUrl,
             options: question.options,
             timeLimit: question.timeLimit,
             serverStartTime: room.questionStartTime,
@@ -284,12 +383,11 @@ function registerHandlers(io) {
       if (!room) return;
 
       if (room.hostSocketId === socket.id) {
-        // Host disconnected — notify all players and destroy room
+        // Host disconnected — notify players but keep room alive
         io.to(roomCode).emit('room:host-disconnected', {
-          message: 'The host has disconnected. The game has ended.',
+          message: 'The host has disconnected. Waiting for them to return...',
         });
-        removeRoom(roomCode);
-        console.log(`[Room ${roomCode}] Host disconnected, room destroyed`);
+        console.log(`[Room ${roomCode}] Host disconnected, room kept alive for rejoining`);
       } else {
         // Student disconnected
         const result = removePlayer(socket.id);

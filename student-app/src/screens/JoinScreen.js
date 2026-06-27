@@ -12,6 +12,8 @@ import {
   Alert,
   StatusBar,
   Dimensions,
+  Image,
+  ScrollView,
 } from 'react-native';
 import socket from '../socket';
 
@@ -20,7 +22,9 @@ const { width } = Dimensions.get('window');
 export default function JoinScreen({ onJoined }) {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [password, setPassword] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const [activeRooms, setActiveRooms] = useState([]);
 
   // Animations
   const cardScale = useRef(new Animated.Value(0.9)).current;
@@ -64,6 +68,19 @@ export default function JoinScreen({ onJoined }) {
         }),
       ])
     ).start();
+
+    // Fetch active rooms on mount
+    socket.connect();
+    socket.emit('student:get-active-rooms', (response) => {
+      if (response && response.success) {
+        setActiveRooms(response.rooms);
+      }
+    });
+
+    return () => {
+      // Disconnect if we unmount and haven't joined
+      // Note: we don't disconnect if we successfully joined (handled by onJoined)
+    };
   }, []);
 
   const handleJoin = () => {
@@ -74,8 +91,8 @@ export default function JoinScreen({ onJoined }) {
       Alert.alert('Oops!', 'Please enter your name.');
       return;
     }
-    if (!/^\d{6}$/.test(trimmedCode)) {
-      Alert.alert('Oops!', 'Room code must be exactly 6 digits.');
+    if (!/^[A-Za-z0-9]+$/.test(trimmedCode)) {
+      Alert.alert('Oops!', 'Room code must be alphanumeric.');
       return;
     }
 
@@ -97,18 +114,25 @@ export default function JoinScreen({ onJoined }) {
 
     socket.connect();
 
-    socket.emit('student:join-room', { roomCode: trimmedCode, playerName: trimmedName }, (response) => {
+    socket.emit('student:join-room', { roomCode: trimmedCode, playerName: trimmedName, password }, (response) => {
       setIsJoining(false);
       if (response && response.success) {
+        if (response.imageUrls && response.imageUrls.length > 0) {
+          response.imageUrls.forEach(url => Image.prefetch(url));
+        }
         onJoined(trimmedName, trimmedCode);
       } else {
         socket.disconnect();
         Alert.alert(
           'Could not join',
-          response?.message || 'Failed to join the room. Check the code and try again.'
+          response?.error || 'Failed to join the room. Check the code and try again.'
         );
       }
     });
+  };
+
+  const handleSelectRoom = (code) => {
+    setRoomCode(code);
   };
 
   const orbScale = gradientAnim.interpolate({
@@ -181,12 +205,25 @@ export default function JoinScreen({ onJoined }) {
             <Text style={styles.inputLabel}>ROOM CODE</Text>
             <TextInput
               style={[styles.input, styles.codeInput]}
-              placeholder="000000"
+              placeholder="CODE"
               placeholderTextColor="#737373"
               value={roomCode}
-              onChangeText={(text) => setRoomCode(text.replace(/[^0-9]/g, ''))}
-              keyboardType="number-pad"
-              maxLength={6}
+              onChangeText={(text) => setRoomCode(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())}
+              maxLength={10}
+              returnKeyType="next"
+              selectionColor="#fafafa"
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.inputLabel}>PASSWORD (OPTIONAL)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter password if required"
+              placeholderTextColor="#737373"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
               returnKeyType="go"
               onSubmitEditing={handleJoin}
               selectionColor="#fafafa"
@@ -205,6 +242,21 @@ export default function JoinScreen({ onJoined }) {
               </Text>
             </TouchableOpacity>
           </Animated.View>
+
+          {/* Active Rooms List */}
+          {activeRooms.length > 0 && (
+            <View style={styles.activeRoomsContainer}>
+              <Text style={styles.inputLabel}>ACTIVE ROOMS (TAP TO SELECT)</Text>
+              <ScrollView style={styles.activeRoomsList} showsVerticalScrollIndicator={false}>
+                {activeRooms.map((r, i) => (
+                  <TouchableOpacity key={i} style={styles.activeRoomItem} onPress={() => handleSelectRoom(r.code)}>
+                    <Text style={styles.activeRoomCode}>{r.code}</Text>
+                    <Text style={styles.activeRoomInfo}>{r.playerCount} players • {r.status}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -310,5 +362,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: -0.2,
+  },
+  activeRoomsContainer: {
+    marginTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#262626',
+    paddingTop: 16,
+  },
+  activeRoomsList: {
+    maxHeight: 120,
+  },
+  activeRoomItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1a1a1a',
+  },
+  activeRoomCode: {
+    color: '#fafafa',
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 2,
+  },
+  activeRoomInfo: {
+    color: '#737373',
+    fontSize: 12,
   },
 });

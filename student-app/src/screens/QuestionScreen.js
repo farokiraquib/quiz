@@ -8,6 +8,7 @@ import {
   StatusBar,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -21,7 +22,7 @@ export default function QuestionScreen({
   onAnswerSubmitted,
   socket,
 }) {
-  const { questionIndex, text, options, timeLimit, serverStartTime } = question;
+  const { questionIndex, text, imageUrl, options, timeLimit, serverStartTime } = question;
 
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -228,13 +229,20 @@ export default function QuestionScreen({
           </Text>
         </View>
 
-        {/* Question text */}
+        {/* Question text & image */}
         <Animated.View
           style={[
             styles.questionContainer,
             { transform: [{ translateY: questionSlide }] },
           ]}
         >
+          {imageUrl && (
+            <Image 
+              source={{ uri: imageUrl }} 
+              style={styles.questionImage}
+              resizeMode="contain"
+            />
+          )}
           <Text style={styles.questionText}>{text}</Text>
         </Animated.View>
 
@@ -288,12 +296,19 @@ export default function QuestionScreen({
                   activeOpacity={0.7}
                 >
                   <Text style={styles.optionIcon}>{OPTION_ICONS[index]}</Text>
+                  {option?.imageUrl && (
+                    <Image 
+                      source={{ uri: option.imageUrl }} 
+                      style={styles.optionImage}
+                      resizeMode="contain"
+                    />
+                  )}
                   <Text
                     style={styles.optionText}
                     numberOfLines={3}
                     adjustsFontSizeToFit
                   >
-                    {option}
+                    {option?.text || option}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>
@@ -361,12 +376,19 @@ const styles = StyleSheet.create({
   questionContainer: {
     backgroundColor: '#0a0a0a',
     borderRadius: 24,
-    padding: 32,
+    padding: 24,
     marginBottom: 24,
     minHeight: 120,
     justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#262626',
+  },
+  questionImage: {
+    width: '100%',
+    height: 120,
+    marginBottom: 16,
+    borderRadius: 8,
   },
   questionText: {
     fontSize: 24,
@@ -425,8 +447,14 @@ const styles = StyleSheet.create({
     color: '#737373',
     marginBottom: 8,
   },
+  optionImage: {
+    width: '100%',
+    height: 40,
+    marginBottom: 8,
+    borderRadius: 4,
+  },
   optionText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: '#e5e5e5',
     textAlign: 'center',

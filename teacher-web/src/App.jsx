@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import socket from './socket';
 import useSocket from './hooks/useSocket';
 import CreateQuiz from './components/CreateQuiz';
@@ -12,6 +12,7 @@ export default function App() {
 
   // ── Data State ──
   const [roomCode, setRoomCode] = useState('');
+  const [hostSecret, setHostSecret] = useState('');
   const [questions, setQuestions] = useState([]);
   const [players, setPlayers] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -21,6 +22,43 @@ export default function App() {
   const [isGameOver, setIsGameOver] = useState(false);
 
   // ── Socket Event Handlers ──
+
+  // Auto-rejoin on mount
+  useEffect(() => {
+    const savedRoom = localStorage.getItem('livequizz_room');
+    const savedSecret = localStorage.getItem('livequizz_secret');
+    
+    if (savedRoom && savedSecret) {
+      socket.connect();
+      socket.emit('host:rejoin-room', { roomCode: savedRoom, hostSecret: savedSecret }, (response) => {
+        if (response && response.success) {
+          setRoomCode(savedRoom);
+          setHostSecret(savedSecret);
+          setQuestions(response.room.questions);
+          
+          // Convert Map-like structure or Array to players list if available
+          if (response.room.players) {
+             // Depending on how backend serializes Maps, it might be an object
+             const playersList = Object.values(response.room.players || {});
+             setPlayers(playersList);
+          }
+          
+          if (response.room.status === 'playing') {
+            setQuestionIndex(response.room.currentQuestionIndex);
+            setCurrentQuestion(response.room.questions[response.room.currentQuestionIndex]);
+            setScreen('playing');
+          } else if (response.room.status === 'finished') {
+            setScreen('finished');
+          } else {
+            setScreen('lobby');
+          }
+        } else {
+          localStorage.removeItem('livequizz_room');
+          localStorage.removeItem('livequizz_secret');
+        }
+      });
+    }
+  }, []);
 
   // Player joined (throttled 300ms)
   useSocket(
@@ -73,10 +111,14 @@ export default function App() {
 
   // ── Action Handlers ──
 
-  const handleRoomCreated = useCallback((code, quizQuestions) => {
+  const handleRoomCreated = useCallback((code, secret, quizQuestions) => {
     setRoomCode(code);
+    setHostSecret(secret);
     setQuestions(quizQuestions);
     setScreen('lobby');
+    
+    localStorage.setItem('livequizz_room', code);
+    localStorage.setItem('livequizz_secret', secret);
   }, []);
 
   const handleStartQuiz = useCallback(() => {
@@ -122,10 +164,11 @@ export default function App() {
     setScreen('playing');
   }, [questionIndex, questions, roomCode]);
 
-  const handleBackHome = useCallback(() => {
+  const handleLeaveKeepOpen = useCallback(() => {
     socket.disconnect();
     setScreen('create');
     setRoomCode('');
+    setHostSecret('');
     setQuestions([]);
     setPlayers([]);
     setCurrentQuestion(null);
@@ -134,6 +177,23 @@ export default function App() {
     setLeaderboard([]);
     setIsGameOver(false);
   }, []);
+
+  const handleEndGame = useCallback(() => {
+    socket.emit('host:end-game', { roomCode });
+    socket.disconnect();
+    localStorage.removeItem('livequizz_room');
+    localStorage.removeItem('livequizz_secret');
+    setScreen('create');
+    setRoomCode('');
+    setHostSecret('');
+    setQuestions([]);
+    setPlayers([]);
+    setCurrentQuestion(null);
+    setQuestionIndex(0);
+    setAnsweredCount(0);
+    setLeaderboard([]);
+    setIsGameOver(false);
+  }, [roomCode]);
 
   // ── Render ──
   return (
@@ -147,11 +207,16 @@ export default function App() {
           roomCode={roomCode}
           players={players}
           onStart={handleStartQuiz}
+          onLeaveKeepOpen={handleLeaveKeepOpen}
+          onEndGame={handleEndGame}
         />
       )}
 
       {screen === 'playing' && (
         <GameControl
+          roomCode={roomCode}
+          hostSecret={hostSecret}
+          questions={questions}
           question={currentQuestion}
           questionIndex={questionIndex}
           totalQuestions={questions.length}
@@ -167,7 +232,7 @@ export default function App() {
           leaderboard={leaderboard}
           isGameOver={isGameOver || screen === 'finished'}
           onNextQuestion={handleNextQuestion}
-          onBackHome={handleBackHome}
+          onBackHome={handleEndGame}
         />
       )}
     </div>
