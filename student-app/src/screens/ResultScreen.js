@@ -19,9 +19,21 @@ export default function ResultScreen({
   socketId,
   question,
 }) {
-  const { correctIndex, leaderboard } = questionResult;
-  const isCorrect = selectedAnswer === correctIndex;
-  const didAnswer = selectedAnswer !== null && selectedAnswer !== undefined;
+  const { correctIndices, correctIndex, leaderboard } = questionResult;
+  const actualCorrect = correctIndices || (correctIndex !== undefined ? [correctIndex] : []);
+
+  const isArray = Array.isArray(selectedAnswer);
+  const didAnswer = isArray ? selectedAnswer.length > 0 : (selectedAnswer !== null && selectedAnswer !== undefined);
+
+  let isCorrect = false;
+  if (didAnswer) {
+    if (isArray) {
+      isCorrect = selectedAnswer.length === actualCorrect.length && 
+                  selectedAnswer.every(val => actualCorrect.includes(val));
+    } else {
+      isCorrect = actualCorrect.includes(selectedAnswer);
+    }
+  }
 
   // Find player in leaderboard
   const playerEntry = leaderboard?.find((entry) => entry.socketId === socketId);
@@ -90,7 +102,9 @@ export default function ResultScreen({
     outputRange: ['0deg', '-5deg', '5deg'],
   });
 
-  const correctAnswerText = question?.options?.[correctIndex] || `Option ${correctIndex + 1}`;
+  const correctAnswerText = actualCorrect
+    .map(idx => question?.options?.[idx] || `Option ${idx + 1}`)
+    .join(', ');
 
   return (
     <SafeAreaView
