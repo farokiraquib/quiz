@@ -101,6 +101,7 @@ function registerHandlers(io) {
         // Broadcast question WITHOUT correctIndices
         io.to(data.roomCode).emit('question:new', {
           questionIndex: room.currentQuestionIndex,
+          type: question.type,
           text: question.text,
           options: question.options,
           timeLimit: question.timeLimit,
@@ -152,16 +153,26 @@ function registerHandlers(io) {
           return safeCallback({ success: false, error: 'No active question' });
         }
 
-        // Handle both single (legacy) and multiple choice formats
+        // Calculate accuracy
         const correct = currentQuestion.correctIndices || [currentQuestion.correctIndex];
         const submitted = Array.isArray(answerIndices) ? answerIndices : [answerIndices];
+
+        let correctPicks = 0;
+        let wrongPicks = 0;
+        submitted.forEach(val => {
+          if (correct.includes(val)) correctPicks++;
+          else wrongPicks++;
+        });
         
-        // Arrays must have the same length and all submitted elements must be in correct array
-        const isCorrect = correct.length === submitted.length && 
-                          submitted.every(val => correct.includes(val));
+        let accuracy = 0;
+        if (correct.length > 0) {
+          accuracy = Math.max(0, (correctPicks - wrongPicks) / correct.length);
+        } else {
+          accuracy = submitted.length === 0 ? 1 : 0;
+        }
 
         const maxTimeMs = currentQuestion.timeLimit * 1000;
-        const score = calculateScore(isCorrect, timeTaken, maxTimeMs);
+        const score = calculateScore(accuracy, timeTaken, maxTimeMs);
 
         // Add to cumulative score — NO sorting here
         const currentScore = room.scores.get(socket.id) || 0;
@@ -237,6 +248,7 @@ function registerHandlers(io) {
 
           io.to(data.roomCode).emit('question:new', {
             questionIndex: room.currentQuestionIndex,
+            type: question.type,
             text: question.text,
             options: question.options,
             timeLimit: question.timeLimit,

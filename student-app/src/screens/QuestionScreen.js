@@ -317,8 +317,6 @@ export default function QuestionScreen({
   );
 }
 
-const optionSize = (width - 56) / 2;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -400,13 +398,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignContent: 'center',
-    gap: 16,
+    gap: 12,
   },
   optionWrapper: {
-    width: optionSize,
+    width: '48%',
   },
   optionButton: {
-    height: Math.max(optionSize * 0.7, 90),
+    height: 100,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',

@@ -2,21 +2,23 @@
 
 /**
  * Calculates score for a single answer submission.
- * If correct: base 1000 scaled by speed, clamped to minimum 100.
- * If wrong: 0.
+ * Based 50% on accuracy and 50% on speed. Max score 1000.
  *
- * @param {boolean} isCorrect - Whether the answer was correct
+ * @param {number} accuracy - A float between 0 and 1 representing answer correctness
  * @param {number} timeTakenMs - Time taken to answer in milliseconds
  * @param {number} maxTimeMs - Maximum allowed time in milliseconds
  * @returns {number} The calculated score
  */
-function calculateScore(isCorrect, timeTakenMs, maxTimeMs) {
-  if (!isCorrect) return 0;
+function calculateScore(accuracy, timeTakenMs, maxTimeMs) {
+  if (accuracy <= 0) return 0;
 
   // Clamp timeTaken to [0, maxTimeMs] to handle edge cases
   const clampedTime = Math.max(0, Math.min(timeTakenMs, maxTimeMs));
-  const rawScore = Math.round(1000 * (1 - clampedTime / maxTimeMs));
-  return Math.max(100, rawScore);
+  const timeBonus = 1 - (clampedTime / maxTimeMs);
+  
+  // 500 max for accuracy, 500 max for speed (scaled by accuracy)
+  const score = (500 * accuracy) + (500 * accuracy * timeBonus);
+  return Math.round(score);
 }
 
 /**
