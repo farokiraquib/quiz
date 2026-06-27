@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import socket from '../socket';
+import socket, { SERVER_URL } from '../socket';
 
 const TIME_LIMITS = [10, 15, 20, 30];
 
@@ -59,7 +59,7 @@ export default function CreateQuiz({ onRoomCreated }) {
     formData.append('image', file);
     setIsUploading(true);
     try {
-      const res = await fetch('http://localhost:3001/upload', {
+      const res = await fetch(`${SERVER_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
