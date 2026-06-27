@@ -226,7 +226,9 @@ export default function GameControl({
             </button>
           </div>
         )}
-      {/* Editor Modal */}
+        {/* Editor Modal */}
+      </div>
+      
       {isEditing && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
           <div className="glass-card w-full max-w-2xl max-h-[80vh] flex flex-col p-6 overflow-hidden">
