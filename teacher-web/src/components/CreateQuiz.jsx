@@ -255,9 +255,9 @@ export default function CreateQuiz({ onRoomCreated }) {
                   />
                   <label
                     htmlFor={`question-img-${qIndex}`}
-                    className="text-sm bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded cursor-pointer transition-colors"
+                    className="btn-ghost text-xs px-3 py-1 cursor-pointer"
                   >
-                    {q.imageUrl ? 'Change Image' : 'Add Image'}
+                    {q.imageUrl ? '🖼️ Change Image' : '🖼️ Add Image'}
                   </label>
                   {q.imageUrl && (
                     <img src={q.imageUrl} alt="Question" className="h-8 rounded" />
@@ -341,9 +341,9 @@ export default function CreateQuiz({ onRoomCreated }) {
                           />
                           <label
                             htmlFor={`opt-img-${qIndex}-${optIndex}`}
-                            className="text-[10px] bg-black/20 hover:bg-black/40 text-white/80 px-2 py-1 rounded cursor-pointer transition-colors"
+                            className="btn-ghost text-[10px] px-2 py-1 cursor-pointer"
                           >
-                            {opt.imageUrl ? 'Change Img' : '+ Img'}
+                            {opt.imageUrl ? '🖼️ Change' : '🖼️ Add Img'}
                           </label>
                           {opt.imageUrl && (
                             <img src={opt.imageUrl} alt="Opt" className="h-4 rounded" />
