@@ -19,6 +19,11 @@ app.use(cors({
 
 app.use(express.json());
 
+// Root endpoint for cron job pings
+app.get('/', (req, res) => {
+  res.send('LiveQuizz Server is active and running!');
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: Date.now() });
