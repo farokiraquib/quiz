@@ -1,4 +1,4 @@
-// LiveQuizz Server — Entry Point
+// LiveQuizz Server — Entry Point (Scalable Architecture)
 require('dotenv').config();
 
 const express = require('express');
@@ -10,6 +10,9 @@ const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
 const { registerHandlers } = require('./socketHandlers');
+const { getRedisClient, getSubscriberClient } = require('./redis');
+const authRoutes = require('./routes/auth');
+const quizRoutes = require('./routes/quiz');
 
 // ─── Cloudinary Config ───────────────────────────────────────────────
 cloudinary.config({
@@ -27,7 +30,7 @@ const app = express();
 
 app.use(cors({
   origin: true, // Automatically reflect the request origin
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
 }));
 
@@ -39,8 +42,18 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+app.get('/health', async (req, res) => {
+  const health = { status: 'ok', timestamp: Date.now() };
+  try {
+    const redis = await getRedisClient();
+    if (redis && redis.isOpen) {
+      await redis.ping();
+      health.redis = 'connected';
+    }
+  } catch {
+    health.redis = 'disconnected';
+  }
+  res.json(health);
 });
 
 // Image upload endpoint
@@ -67,6 +80,10 @@ app.post('/upload', upload.single('image'), (req, res) => {
   streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
 });
 
+// ─── API Routes ──────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
+app.use('/api/quizzes', quizRoutes);
+
 // ─── HTTP + Socket.io Server ─────────────────────────────────────────
 const server = http.createServer(app);
 
@@ -78,11 +95,40 @@ const io = new Server(server, {
   },
 });
 
-// Register all socket event handlers
-registerHandlers(io);
+// ─── Redis Adapter Setup (for horizontal scaling) ────────────────────
+async function setupRedisAdapter() {
+  try {
+    const { createAdapter } = require('@socket.io/redis-adapter');
+    const pubClient = await getRedisClient();
+    const subClient = await getSubscriberClient();
 
-// ─── Start Server ────────────────────────────────────────────────────
-server.listen(PORT, () => {
-  console.log(`\n🚀 LiveQuizz server running on http://localhost:${PORT}`);
-  console.log(`   Socket.io ready for connections\n`);
+    if (pubClient && pubClient.isOpen && subClient && subClient.isOpen) {
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log('   ✅ Socket.io Redis adapter enabled (multi-instance scaling ready)');
+    }
+  } catch (err) {
+    console.warn('   ⚠️  Redis adapter not available, using in-memory (single instance mode)');
+    console.warn(`   Reason: ${err.message}`);
+  }
+}
+
+// ─── Boot Sequence ───────────────────────────────────────────────────
+async function start() {
+  // 1. Try to connect Redis (optional — falls back gracefully)
+  await setupRedisAdapter();
+
+  // 2. Register all socket event handlers
+  registerHandlers(io);
+
+  // 3. Start HTTP server
+  server.listen(PORT, () => {
+    console.log(`\n🚀 LiveQuizz server running on http://localhost:${PORT}`);
+    console.log(`   Socket.io ready for connections`);
+    console.log(`   API routes: /api/auth, /api/quizzes\n`);
+  });
+}
+
+start().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });

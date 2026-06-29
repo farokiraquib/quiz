@@ -3,11 +3,20 @@
 const {
   createRoom,
   getRoom,
+  setRoomField,
+  getQuestions,
   addPlayer,
   removePlayer,
   removeRoom,
   findRoomBySocket,
   getActiveRooms,
+  markAnswered,
+  hasAnswered,
+  getAnsweredCount,
+  clearAnswered,
+  getScore,
+  addScore,
+  getAllPlayers,
 } = require('./gameState');
 
 const { calculateScore, buildLeaderboard } = require('./leaderboard');
@@ -21,13 +30,13 @@ function registerHandlers(io) {
     console.log(`[Socket] Connected: ${socket.id}`);
 
     // ─── 1. HOST: CREATE ROOM ────────────────────────────────────────
-    socket.on('host:create-room', (data, callback) => {
+    socket.on('host:create-room', async (data, callback) => {
       try {
         if (!data || !Array.isArray(data.questions) || data.questions.length === 0) {
           return callback({ success: false, error: 'Questions array is required' });
         }
 
-        const { code: roomCode, hostSecret } = createRoom(
+        const { code: roomCode, hostSecret } = await createRoom(
           socket.id, 
           data.questions, 
           data.customRoomCode, 
@@ -44,11 +53,11 @@ function registerHandlers(io) {
     });
 
     // ─── 1.5. HOST: REJOIN ROOM ──────────────────────────────────────
-    socket.on('host:rejoin-room', (data, callback) => {
+    socket.on('host:rejoin-room', async (data, callback) => {
       try {
         if (!data || !data.roomCode || !data.hostSecret) return callback({ success: false });
         
-        const room = getRoom(data.roomCode);
+        const room = await getRoom(data.roomCode);
         if (!room) return callback({ success: false, error: 'Room not found' });
         
         if (room.hostSecret !== data.hostSecret) {
@@ -56,65 +65,39 @@ function registerHandlers(io) {
         }
 
         // Reassign host socket id
-        room.hostSocketId = socket.id;
+        await setRoomField(data.roomCode, 'hostSocketId', socket.id);
         socket.join(data.roomCode);
         
         console.log(`[Room ${data.roomCode}] Host rejoined with socket ${socket.id}`);
-        callback({ success: true, room });
+        
+        const playersMap = await getAllPlayers(data.roomCode);
+        const players = Array.from(playersMap.values());
+        const questions = await getQuestions(data.roomCode);
+        
+        callback({ success: true, room: { ...room, players, questions } });
       } catch (err) {
         console.error('[host:rejoin-room] Error:', err);
         callback({ success: false });
       }
     });
 
-    // ─── 1.6. HOST: UPDATE QUESTIONS ──────────────────────────────────
-    socket.on('host:update-questions', (data, callback) => {
-      try {
-        if (!data || !data.roomCode || !data.questions) return;
-        const room = getRoom(data.roomCode);
-        if (!room || room.hostSocketId !== socket.id) return;
-        
-        room.questions = data.questions;
-        console.log(`[Room ${data.roomCode}] Questions updated`);
-        if (typeof callback === 'function') callback({ success: true });
-      } catch (err) {
-        console.error('[host:update-questions] Error:', err);
-      }
-    });
-
-    // ─── 1.7. HOST: END GAME EXPLICITLY ───────────────────────────────
-    socket.on('host:end-game', (data) => {
-      try {
-        if (!data || !data.roomCode) return;
-        const room = getRoom(data.roomCode);
-        if (!room || room.hostSocketId !== socket.id) return;
-        
-        io.to(data.roomCode).emit('room:host-disconnected', {
-          message: 'The host has ended the game.',
-        });
-        removeRoom(data.roomCode);
-        console.log(`[Room ${data.roomCode}] Game ended by host, room destroyed`);
-      } catch (err) {
-        console.error('[host:end-game] Error:', err);
-      }
-    });
-
     // ─── 1.8. STUDENT: GET ACTIVE ROOMS ───────────────────────────────
-    socket.on('student:get-active-rooms', (callback) => {
+    socket.on('student:get-active-rooms', async (callback) => {
       if (typeof callback === 'function') {
-        callback({ success: true, rooms: getActiveRooms() });
+        const rooms = await getActiveRooms();
+        callback({ success: true, rooms });
       }
     });
 
     // ─── 2. STUDENT: JOIN ROOM ───────────────────────────────────────
-    socket.on('student:join-room', (data, callback) => {
+    socket.on('student:join-room', async (data, callback) => {
       try {
         if (!data || !data.roomCode || !data.playerName) {
           return callback({ success: false, error: 'Room code and player name are required' });
         }
 
         const { roomCode, playerName } = data;
-        const room = getRoom(roomCode);
+        const room = await getRoom(roomCode);
 
         if (!room) {
           return callback({ success: false, error: 'Room not found' });
@@ -124,30 +107,27 @@ function registerHandlers(io) {
           return callback({ success: false, error: 'Incorrect password' });
         }
 
-        // Check for duplicate socket joining
-        if (room.players.has(socket.id)) {
-          return callback({ success: false, error: 'You have already joined this room' });
-        }
-
-        const player = addPlayer(roomCode, socket.id, playerName);
+        const player = await addPlayer(roomCode, socket.id, playerName);
         if (!player) {
           return callback({ success: false, error: 'Failed to join room' });
         }
 
         socket.join(roomCode);
 
+        const playersMap = await getAllPlayers(roomCode);
+
         // Notify the room that a new player joined
         io.to(roomCode).emit('room:player-joined', {
           id: socket.id,
           name: playerName,
-          playerCount: room.players.size,
+          playerCount: playersMap.size,
         });
 
-        console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${room.players.size}`);
+        console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${playersMap.size}`);
         
-        // Extract all image URLs for preloading
+        const questions = await getQuestions(roomCode);
         const imageUrls = [];
-        room.questions.forEach(q => {
+        questions.forEach(q => {
           if (q.imageUrl) imageUrls.push(q.imageUrl);
           if (q.options) {
             q.options.forEach(opt => {
@@ -160,7 +140,7 @@ function registerHandlers(io) {
 
         // If game is playing, send the current question to the new student
         if (room.status === 'playing') {
-          const question = room.questions[room.currentQuestionIndex];
+          const question = questions[room.currentQuestionIndex];
           if (question) {
             socket.emit('question:new', {
               questionIndex: room.currentQuestionIndex,
@@ -180,19 +160,20 @@ function registerHandlers(io) {
     });
 
     // ─── 3. HOST: START QUESTION ─────────────────────────────────────
-    socket.on('host:start-question', (data) => {
+    socket.on('host:start-question', async (data) => {
       try {
         if (!data || !data.roomCode) return;
 
-        const room = getRoom(data.roomCode);
+        const room = await getRoom(data.roomCode);
         if (!room) return;
         if (room.hostSocketId !== socket.id) return;
 
-        room.status = 'playing';
-        room.questionStartTime = Date.now();
-        room.answeredSet.clear();
+        await setRoomField(data.roomCode, 'status', 'playing');
+        await setRoomField(data.roomCode, 'questionStartTime', Date.now());
+        await clearAnswered(data.roomCode);
 
-        const question = room.questions[room.currentQuestionIndex];
+        const questions = await getQuestions(data.roomCode);
+        const question = questions[room.currentQuestionIndex];
         if (!question) return;
 
         // Broadcast question WITHOUT correctIndices
@@ -203,17 +184,17 @@ function registerHandlers(io) {
           imageUrl: question.imageUrl,
           options: question.options,
           timeLimit: question.timeLimit,
-          serverStartTime: room.questionStartTime,
+          serverStartTime: Date.now(),
         });
 
-        console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1}/${room.questions.length} started`);
+        console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1}/${questions.length} started`);
       } catch (err) {
         console.error('[host:start-question] Error:', err);
       }
     });
 
     // ─── 4. STUDENT: SUBMIT ANSWER ───────────────────────────────────
-    socket.on('student:submit-answer', (data, callback) => {
+    socket.on('student:submit-answer', async (data, callback) => {
       const safeCallback = typeof callback === 'function' ? callback : () => {};
       try {
         if (!data || !data.roomCode || data.answerIndices === undefined) {
@@ -221,7 +202,7 @@ function registerHandlers(io) {
         }
 
         const { roomCode, answerIndices } = data;
-        const room = getRoom(roomCode);
+        const room = await getRoom(roomCode);
 
         if (!room) {
           return safeCallback({ success: false, error: 'Room not found' });
@@ -231,22 +212,19 @@ function registerHandlers(io) {
           return safeCallback({ success: false, error: 'Game is not currently active' });
         }
 
-        if (!room.players.has(socket.id)) {
-          return safeCallback({ success: false, error: 'You are not in this room' });
-        }
-
-        // Check if student already answered this question
-        if (room.answeredSet.has(socket.id)) {
+        const alreadyAnswered = await hasAnswered(roomCode, socket.id);
+        if (alreadyAnswered) {
           return safeCallback({ success: false, error: 'You have already answered this question' });
         }
 
         // Mark as answered
-        room.answeredSet.add(socket.id);
+        await markAnswered(roomCode, socket.id);
 
         // Server-authoritative timing
         const timeTaken = Date.now() - room.questionStartTime;
 
-        const currentQuestion = room.questions[room.currentQuestionIndex];
+        const questions = await getQuestions(roomCode);
+        const currentQuestion = questions[room.currentQuestionIndex];
         if (!currentQuestion) {
           return safeCallback({ success: false, error: 'No active question' });
         }
@@ -272,17 +250,18 @@ function registerHandlers(io) {
         const maxTimeMs = currentQuestion.timeLimit * 1000;
         const score = calculateScore(accuracy, timeTaken, maxTimeMs);
 
-        // Add to cumulative score — NO sorting here
-        const currentScore = room.scores.get(socket.id) || 0;
-        room.scores.set(socket.id, currentScore + score);
+        await addScore(roomCode, socket.id, score);
+
+        const answeredCount = await getAnsweredCount(roomCode);
+        const playersMap = await getAllPlayers(roomCode);
 
         // Notify host ONLY with answer count
         io.to(room.hostSocketId).emit('game:answer-received', {
-          answeredCount: room.answeredSet.size,
-          totalPlayers: room.players.size,
+          answeredCount,
+          totalPlayers: playersMap.size,
         });
 
-        console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${isCorrect ? 'correct' : 'wrong'} (+${score})`);
+        console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${accuracy > 0 ? 'correct' : 'wrong'} (+${score})`);
         safeCallback({ success: true, timeTaken });
       } catch (err) {
         console.error('[student:submit-answer] Error:', err);
@@ -291,31 +270,28 @@ function registerHandlers(io) {
     });
 
     // ─── 5. HOST: END QUESTION ───────────────────────────────────────
-    socket.on('host:end-question', (data) => {
+    socket.on('host:end-question', async (data) => {
       try {
         if (!data || !data.roomCode) return;
 
-        const room = getRoom(data.roomCode);
+        const room = await getRoom(data.roomCode);
         if (!room) return;
         if (room.hostSocketId !== socket.id) return;
 
-        const currentQuestion = room.questions[room.currentQuestionIndex];
+        const questions = await getQuestions(data.roomCode);
+        const currentQuestion = questions[room.currentQuestionIndex];
         if (!currentQuestion) return;
 
-        // Build leaderboard — THIS is where sorting happens
-        const leaderboard = buildLeaderboard(room);
+        const leaderboard = await buildLeaderboard(data.roomCode);
 
         io.to(data.roomCode).emit('question:result', {
           correctIndices: currentQuestion.correctIndices || [currentQuestion.correctIndex],
           leaderboard,
         });
 
-        // Check if this was the last question
-        if (room.currentQuestionIndex >= room.questions.length - 1) {
-          room.status = 'finished';
-          io.to(data.roomCode).emit('game:finished', {
-            leaderboard,
-          });
+        if (room.currentQuestionIndex >= questions.length - 1) {
+          await setRoomField(data.roomCode, 'status', 'finished');
+          io.to(data.roomCode).emit('game:finished', { leaderboard });
           console.log(`[Room ${data.roomCode}] Game finished`);
         }
 
@@ -326,44 +302,41 @@ function registerHandlers(io) {
     });
 
     // ─── 6. HOST: NEXT QUESTION ──────────────────────────────────────
-    socket.on('host:next-question', (data) => {
+    socket.on('host:next-question', async (data) => {
       try {
         if (!data || !data.roomCode) return;
 
-        const room = getRoom(data.roomCode);
+        const room = await getRoom(data.roomCode);
         if (!room) return;
         if (room.hostSocketId !== socket.id) return;
 
-        room.currentQuestionIndex++;
+        const nextIndex = room.currentQuestionIndex + 1;
+        await setRoomField(data.roomCode, 'currentQuestionIndex', nextIndex);
 
-        if (room.currentQuestionIndex < room.questions.length) {
-          // More questions — start the next one
-          room.status = 'playing';
-          room.questionStartTime = Date.now();
-          room.answeredSet.clear();
+        const questions = await getQuestions(data.roomCode);
 
-          const question = room.questions[room.currentQuestionIndex];
+        if (nextIndex < questions.length) {
+          await setRoomField(data.roomCode, 'status', 'playing');
+          await setRoomField(data.roomCode, 'questionStartTime', Date.now());
+          await clearAnswered(data.roomCode);
+
+          const question = questions[nextIndex];
 
           io.to(data.roomCode).emit('question:new', {
-            questionIndex: room.currentQuestionIndex,
+            questionIndex: nextIndex,
             type: question.type,
             text: question.text,
             imageUrl: question.imageUrl,
             options: question.options,
             timeLimit: question.timeLimit,
-            serverStartTime: room.questionStartTime,
+            serverStartTime: Date.now(),
           });
 
-          console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1}/${room.questions.length} started`);
+          console.log(`[Room ${data.roomCode}] Question ${nextIndex + 1}/${questions.length} started`);
         } else {
-          // No more questions
-          room.status = 'finished';
-          const leaderboard = buildLeaderboard(room);
-
-          io.to(data.roomCode).emit('game:finished', {
-            leaderboard,
-          });
-
+          await setRoomField(data.roomCode, 'status', 'finished');
+          const leaderboard = await buildLeaderboard(data.roomCode);
+          io.to(data.roomCode).emit('game:finished', { leaderboard });
           console.log(`[Room ${data.roomCode}] Game finished (no more questions)`);
         }
       } catch (err) {
@@ -371,33 +344,53 @@ function registerHandlers(io) {
       }
     });
 
-    // ─── 7. DISCONNECT ───────────────────────────────────────────────
-    socket.on('disconnect', () => {
+    // ─── 7. HOST: END GAME ───────────────────────────────────────────
+    socket.on('host:end-game', async (data) => {
+      try {
+        if (!data || !data.roomCode) return;
+        const room = await getRoom(data.roomCode);
+        if (!room || room.hostSocketId !== socket.id) return;
+        
+        io.to(data.roomCode).emit('room:host-disconnected', {
+          message: 'The host has ended the game.',
+        });
+        await removeRoom(data.roomCode);
+        console.log(`[Room ${data.roomCode}] Game ended by host, room destroyed`);
+      } catch (err) {
+        console.error('[host:end-game] Error:', err);
+      }
+    });
+
+    // ─── 8. DISCONNECT ───────────────────────────────────────────────
+    socket.on('disconnect', async () => {
       console.log(`[Socket] Disconnected: ${socket.id}`);
 
-      // Check if this socket was a host
-      const roomCode = findRoomBySocket(socket.id);
-      if (!roomCode) return;
+      try {
+        // Check if this socket was a host
+        const roomCode = await findRoomBySocket(socket.id);
+        if (!roomCode) return;
 
-      const room = getRoom(roomCode);
-      if (!room) return;
+        const room = await getRoom(roomCode);
+        if (!room) return;
 
-      if (room.hostSocketId === socket.id) {
-        // Host disconnected — notify players but keep room alive
-        io.to(roomCode).emit('room:host-disconnected', {
-          message: 'The host has disconnected. Waiting for them to return...',
-        });
-        console.log(`[Room ${roomCode}] Host disconnected, room kept alive for rejoining`);
-      } else {
-        // Student disconnected
-        const result = removePlayer(socket.id);
-        if (result) {
-          io.to(roomCode).emit('room:player-left', {
-            name: result.playerName,
-            playerCount: result.room.players.size,
+        if (room.hostSocketId === socket.id) {
+          io.to(roomCode).emit('room:host-disconnected', {
+            message: 'The host has disconnected. Waiting for them to return...',
           });
-          console.log(`[Room ${roomCode}] Player left: ${result.playerName}, remaining: ${result.room.players.size}`);
+          console.log(`[Room ${roomCode}] Host disconnected, room kept alive for rejoining`);
+        } else {
+          // Student disconnected
+          const result = await removePlayer(socket.id);
+          if (result) {
+            io.to(roomCode).emit('room:player-left', {
+              name: result.playerName,
+              playerCount: result.playerCount,
+            });
+            console.log(`[Room ${roomCode}] Player left: ${result.playerName}, remaining: ${result.playerCount}`);
+          }
         }
+      } catch (err) {
+        console.error('[disconnect] Error:', err);
       }
     });
   });

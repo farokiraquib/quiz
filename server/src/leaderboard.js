@@ -1,4 +1,7 @@
-// Score calculation and leaderboard builder
+// Score calculation and leaderboard builder (Redis-backed)
+
+const { getRedisClient } = require('./redis');
+const { getAllPlayers } = require('./gameState');
 
 /**
  * Calculates score for a single answer submission.
@@ -22,17 +25,25 @@ function calculateScore(accuracy, timeTakenMs, maxTimeMs) {
 }
 
 /**
- * Builds a sorted leaderboard from the room's scores Map.
- * This is the ONLY place sorting happens in the entire server.
+ * Builds a sorted leaderboard by fetching the Sorted Set from Redis.
  *
- * @param {object} room - A RoomState object
- * @returns {Array<{socketId: string, name: string, score: number, rank: number}>}
+ * @param {string} roomCode - The room code
+ * @returns {Promise<Array<{socketId: string, name: string, score: number, rank: number}>>}
  */
-function buildLeaderboard(room) {
+async function buildLeaderboard(roomCode) {
+  const redis = await getRedisClient();
   const entries = [];
 
-  for (const [socketId, score] of room.scores) {
-    const player = room.players.get(socketId);
+  // ZREVRANGE: get members sorted by score descending, with scores
+  const results = await redis.zRangeWithScores(`room:${roomCode}:scores`, 0, -1, { REV: true });
+  
+  if (!results || results.length === 0) return [];
+
+  // Get player names
+  const playersMap = await getAllPlayers(roomCode);
+
+  for (const { value: socketId, score } of results) {
+    const player = playersMap.get(socketId);
     if (player) {
       entries.push({
         socketId,
@@ -41,9 +52,6 @@ function buildLeaderboard(room) {
       });
     }
   }
-
-  // Sort descending by score
-  entries.sort((a, b) => b.score - a.score);
 
   // Assign ranks (1-indexed, ties get the same rank)
   let currentRank = 1;
