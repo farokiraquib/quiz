@@ -141,7 +141,7 @@ export default function Landing() {
       </nav>
 
       {/* ── Hero Section ── */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden border-b border-white/20">
+      <section className="relative pt-28 pb-16 md:pt-48 md:pb-32 px-4 sm:px-6 overflow-hidden border-b border-white/20">
         {/* Subtle glow behind hero */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[500px] bg-gradient-to-b from-white/[0.08] to-transparent blur-3xl pointer-events-none rounded-full z-0" />
         
@@ -157,9 +157,9 @@ export default function Landing() {
           </AnimatedSection>
           
           <AnimatedSection delay={100}>
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[1.1] mb-6 font-serif">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[1.1] mb-6 font-serif">
               Make your classroom <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fde68a] to-[#f59e0b] font-['Zeyada',cursive] font-normal tracking-wide text-7xl sm:text-8xl md:text-9xl">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fde68a] to-[#f59e0b] font-['Zeyada',cursive] font-normal tracking-wide text-6xl sm:text-8xl md:text-9xl block sm:inline mt-2 sm:mt-0">
                 come alive.
               </span>
             </h1>
@@ -194,35 +194,49 @@ export default function Landing() {
       </section>
 
       {/* ── Social Proof / Trusted By ── */}
-      <section className="border-b border-white/20 bg-[#12261a] py-12 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="border-b border-white/20 bg-[#12261a] py-12 relative z-10 overflow-hidden">
+        <div className="w-full">
           <p className="text-center text-xs font-bold text-white/60 tracking-widest uppercase mb-8">
             Used in classrooms at
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-12 text-white/70 hover:text-white transition-all duration-500 font-serif">
-            {[
-              { icon: Triangle, name: "Lincoln High" },
-              { icon: Circle, name: "Oakridge Elem" },
-              { icon: Hexagon, name: "Riverdale" },
-              { icon: Square, name: "Westside Academy" },
-              { icon: Activity, name: "Pioneer Middle" }
-            ].map((school, i) => (
-              <div key={i} className="flex items-center gap-2 group cursor-default">
-                <school.icon className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
-                <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">{school.name}</span>
-              </div>
-            ))}
+          <div className="w-full relative flex [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)] overflow-hidden">
+            <div className="animate-marquee flex gap-12 md:gap-24 w-max whitespace-nowrap px-6 md:px-12 text-white/70 font-serif items-center">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="flex gap-12 md:gap-24">
+                  <div className="flex items-center gap-2 group cursor-default">
+                    <Triangle className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
+                    <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">Lincoln High</span>
+                  </div>
+                  <div className="flex items-center gap-2 group cursor-default">
+                    <Circle className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
+                    <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">Oakridge Elem</span>
+                  </div>
+                  <div className="flex items-center gap-2 group cursor-default">
+                    <Hexagon className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
+                    <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">Riverdale</span>
+                  </div>
+                  <div className="flex items-center gap-2 group cursor-default">
+                    <Square className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
+                    <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">Westside Academy</span>
+                  </div>
+                  <div className="flex items-center gap-2 group cursor-default">
+                    <Activity className="w-6 h-6 group-hover:text-yellow-300 transition-colors" />
+                    <span className="text-xl font-bold tracking-tight group-hover:text-yellow-300 transition-colors">Pioneer Middle</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ── Core Value / Features ── */}
-      <section id="features" className="py-32 px-6 relative z-10 border-b border-white/20 bg-[#163022]">
+      <section id="features" className="py-20 md:py-32 px-4 md:px-6 relative z-10 border-b border-white/20 bg-[#163022]">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl mb-16">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 font-serif">
+            <h2 className="text-3xl md:text-6xl font-black tracking-tight mb-6 font-serif">
               Spend less time prepping. <br />
-              <span className="text-yellow-300 font-['Zeyada',cursive] font-normal tracking-wide text-5xl md:text-7xl">Spend more time teaching.</span>
+              <span className="text-yellow-300 font-['Zeyada',cursive] font-normal tracking-wide text-4xl md:text-7xl block mt-1 md:inline md:mt-0">Spend more time teaching.</span>
             </h2>
             <p className="text-xl text-white/90 font-medium leading-relaxed">
               We built LiveQuizz to solve real classroom problems without the tech headaches. It's simple, fast, and students love it.
@@ -282,14 +296,14 @@ export default function Landing() {
       </section>
 
       {/* ── CTA Bottom ── */}
-      <section className="py-32 px-6 relative z-10 bg-[#163022]">
+      <section className="py-20 md:py-32 px-4 md:px-6 relative z-10 bg-[#163022]">
         <div className="max-w-5xl mx-auto">
-          <div className="bg-[#1b3a2a] border-4 border-[#12261a] rounded-xl p-10 md:p-20 text-center relative overflow-hidden shadow-2xl">
+          <div className="bg-[#1b3a2a] border-4 border-[#12261a] rounded-xl p-8 md:p-20 text-center relative overflow-hidden shadow-2xl">
             {/* Inner grid for the card */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
             
             <div className="relative z-10">
-              <h2 className="text-5xl md:text-7xl mb-6 font-['Zeyada',cursive] font-normal tracking-wide text-yellow-300">Ready to make learning fun?</h2>
+              <h2 className="text-4xl md:text-7xl mb-6 font-['Zeyada',cursive] font-normal tracking-wide text-yellow-300 leading-tight">Ready to make learning fun?</h2>
               <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium">
                 Join thousands of educators who are transforming their classrooms into engaging, interactive learning environments.
               </p>
