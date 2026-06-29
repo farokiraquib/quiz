@@ -4,6 +4,7 @@ const {
   createRoom,
   getRoom,
   setRoomField,
+  setRoomFields,
   getQuestions,
   addPlayer,
   removePlayer,
@@ -169,11 +170,14 @@ function registerHandlers(io) {
         if (!room) return;
         if (room.hostSocketId !== socket.id) return;
 
-        await setRoomField(data.roomCode, 'status', 'playing');
-        await setRoomField(data.roomCode, 'questionStartTime', Date.now());
-        await clearAnswered(data.roomCode);
-
-        const questions = await getQuestions(data.roomCode);
+        const [questions] = await Promise.all([
+          getQuestions(data.roomCode),
+          setRoomFields(data.roomCode, {
+            status: 'playing',
+            questionStartTime: Date.now(),
+          }),
+          clearAnswered(data.roomCode)
+        ]);
         const question = questions[room.currentQuestionIndex];
         if (!question) return;
 
@@ -278,11 +282,12 @@ function registerHandlers(io) {
         if (!room) return;
         if (room.hostSocketId !== socket.id) return;
 
-        const questions = await getQuestions(data.roomCode);
+        const [questions, leaderboard] = await Promise.all([
+          getQuestions(data.roomCode),
+          buildLeaderboard(data.roomCode)
+        ]);
         const currentQuestion = questions[room.currentQuestionIndex];
         if (!currentQuestion) return;
-
-        const leaderboard = await buildLeaderboard(data.roomCode);
 
         io.to(data.roomCode).emit('question:result', {
           correctIndices: currentQuestion.correctIndices || [currentQuestion.correctIndex],
@@ -311,14 +316,19 @@ function registerHandlers(io) {
         if (room.hostSocketId !== socket.id) return;
 
         const nextIndex = room.currentQuestionIndex + 1;
-        await setRoomField(data.roomCode, 'currentQuestionIndex', nextIndex);
-
-        const questions = await getQuestions(data.roomCode);
+        const [questions] = await Promise.all([
+          getQuestions(data.roomCode),
+          setRoomField(data.roomCode, 'currentQuestionIndex', nextIndex)
+        ]);
 
         if (nextIndex < questions.length) {
-          await setRoomField(data.roomCode, 'status', 'playing');
-          await setRoomField(data.roomCode, 'questionStartTime', Date.now());
-          await clearAnswered(data.roomCode);
+          await Promise.all([
+            setRoomFields(data.roomCode, {
+              status: 'playing',
+              questionStartTime: Date.now(),
+            }),
+            clearAnswered(data.roomCode)
+          ]);
 
           const question = questions[nextIndex];
 

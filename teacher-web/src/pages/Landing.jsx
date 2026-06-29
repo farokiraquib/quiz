@@ -120,7 +120,7 @@ export default function Landing() {
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-white/80 relative z-10">
             <a href="#features" className="hover:text-yellow-200 transition-colors">Why LiveQuizz?</a>
             <a href="#how-it-works" className="hover:text-yellow-200 transition-colors">How it Works</a>
-            <a href="#pricing" className="hover:text-yellow-200 transition-colors">Pricing</a>
+            <Link to="/pricing" className="hover:text-yellow-200 transition-colors">Pricing</Link>
           </div>
 
           <div className="flex items-center gap-4 relative z-10">
@@ -336,8 +336,8 @@ export default function Landing() {
           <div>
             <h4 className="font-bold mb-4 text-white uppercase tracking-wider text-sm">Product</h4>
             <ul className="space-y-3 text-sm text-white/70 font-medium">
-              <li><a href="#" className="hover:text-yellow-300 transition-colors">How it works</a></li>
-              <li><a href="#" className="hover:text-yellow-300 transition-colors">Pricing</a></li>
+              <li><a href="#how-it-works" className="hover:text-yellow-300 transition-colors">How it works</a></li>
+              <li><Link to="/pricing" className="hover:text-yellow-300 transition-colors">Pricing</Link></li>
               <li><a href="#" className="hover:text-yellow-300 transition-colors">Teacher Guide</a></li>
             </ul>
           </div>
