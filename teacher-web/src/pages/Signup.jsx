@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Hexagon, Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
 
@@ -57,24 +57,22 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute w-[500px] h-[500px] rounded-full opacity-[0.03] blur-[120px] bg-white top-1/4 left-1/2 -translate-x-1/2" />
+    <div className="min-h-screen bg-[#163022] flex items-center justify-center p-4 relative bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px]">
       
       <div className="w-full max-w-md relative">
         {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2 mb-10 group">
-          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <Sparkles className="w-5 h-5 text-black" />
+        <Link to="/" className="flex items-center justify-center gap-2.5 mb-10 group">
+          <div className="w-10 h-10 rounded-xl bg-[#fcd34d] flex items-center justify-center shadow-[0_0_10px_rgba(252,211,77,0.3)] border-2 border-white/20 group-hover:scale-110 transition-transform duration-300">
+            <Hexagon className="w-5 h-5 text-[#163022] fill-[#163022]" />
           </div>
-          <span className="text-xl font-bold text-white tracking-tight">LiveQuizz</span>
+          <span className="text-2xl font-black text-white tracking-tight font-serif">LiveQuizz</span>
         </Link>
 
         {/* Card */}
-        <div className="landing-glass-card rounded-2xl p-8 sm:p-10 animate-fade-in-up">
+        <div className="bg-[#1b3a2a] border-2 border-[#12261a] shadow-2xl rounded-2xl p-8 sm:p-10 animate-fade-in-up">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white tracking-tight mb-2">Create Your Account</h1>
-            <p className="text-white/40 text-sm">Start creating engaging quizzes for your classroom</p>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2 font-serif">Create Your Account</h1>
+            <p className="text-white/60 text-sm font-medium">Start creating engaging quizzes for your classroom</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -88,7 +86,7 @@ export default function Signup() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ms. Johnson"
-                  className="input-field !pl-11"
+                  className="input-field !bg-[#163022] !border-white/20 focus:!border-yellow-400 !pl-11 text-white placeholder-white/40"
                   autoComplete="name"
                 />
               </div>
@@ -104,7 +102,7 @@ export default function Signup() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@school.edu"
-                  className="input-field !pl-11"
+                  className="input-field !bg-[#163022] !border-white/20 focus:!border-yellow-400 !pl-11 text-white placeholder-white/40"
                   autoComplete="email"
                 />
               </div>
@@ -120,7 +118,7 @@ export default function Signup() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="input-field !pl-11 !pr-11"
+                  className="input-field !bg-[#163022] !border-white/20 focus:!border-yellow-400 !pl-11 !pr-11 text-white placeholder-white/40"
                   autoComplete="new-password"
                 />
                 <button
@@ -143,7 +141,7 @@ export default function Signup() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Type your password again"
-                  className="input-field !pl-11"
+                  className="input-field !bg-[#163022] !border-white/20 focus:!border-yellow-400 !pl-11 text-white placeholder-white/40"
                   autoComplete="new-password"
                 />
               </div>
@@ -160,7 +158,7 @@ export default function Signup() {
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full !py-3.5 !text-base !rounded-xl"
+              className="w-full bg-[#fcd34d] text-[#163022] font-bold text-lg px-8 py-3.5 rounded-xl hover:bg-[#fde68a] hover:scale-[0.98] transition-all shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <span className="inline-flex items-center gap-2">
