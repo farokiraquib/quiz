@@ -99,13 +99,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#163022] text-white selection:bg-yellow-200 selection:text-black font-sans relative">
-      
-      {/* ── Global Grid Background (Chalkboard Style) ── */}
-      <div className="fixed inset-0 pointer-events-none z-0 flex justify-center">
-        <div className="w-full h-full bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px]"></div>
-        {/* Subtle chalkboard dust noise overlay could go here */}
-      </div>
+    <div className="min-h-screen bg-[#163022] text-white selection:bg-yellow-200 selection:text-black font-sans relative bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px]">
 
       {/* ── Navbar ── */}
       <nav
@@ -165,7 +159,7 @@ export default function Landing() {
           <AnimatedSection delay={100}>
             <h1 className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[1.1] mb-6 font-serif">
               Make your classroom <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fde68a] to-[#f59e0b]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#fde68a] to-[#f59e0b] font-['Caveat',cursive] font-normal tracking-wide text-7xl sm:text-8xl md:text-9xl">
                 come alive.
               </span>
             </h1>
@@ -228,7 +222,7 @@ export default function Landing() {
           <div className="max-w-3xl mb-16">
             <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 font-serif">
               Spend less time prepping. <br />
-              <span className="text-yellow-200/80">Spend more time teaching.</span>
+              <span className="text-yellow-300 font-['Caveat',cursive] font-normal tracking-wide text-5xl md:text-7xl">Spend more time teaching.</span>
             </h2>
             <p className="text-xl text-white/90 font-medium leading-relaxed">
               We built LiveQuizz to solve real classroom problems without the tech headaches. It's simple, fast, and students love it.
@@ -295,7 +289,7 @@ export default function Landing() {
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
             
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 text-white font-serif">Ready to make learning fun?</h2>
+              <h2 className="text-5xl md:text-7xl mb-6 font-['Caveat',cursive] font-normal tracking-wide text-yellow-300">Ready to make learning fun?</h2>
               <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium">
                 Join thousands of educators who are transforming their classrooms into engaging, interactive learning environments.
               </p>
