@@ -243,7 +243,7 @@ async function removePlayer(socketId) {
   // Find rooms by scanning for room:*:players keys
   let cursor = '0';
   do {
-    const result = await redis.scan(Number(cursor), { MATCH: 'room:*:players', COUNT: 100 });
+    const result = await redis.scan(cursor, { MATCH: 'room:*:players', COUNT: 100 });
     cursor = String(result.cursor);
     for (const key of result.keys) {
       const exists = await redis.hExists(key, socketId);
@@ -313,7 +313,7 @@ async function findRoomBySocket(socketId) {
   // Scan for room:* keys (room metadata hashes, not sub-keys)
   let cursor = '0';
   do {
-    const result = await redis.scan(Number(cursor), { MATCH: 'room:*', COUNT: 100 });
+    const result = await redis.scan(cursor, { MATCH: 'room:*', COUNT: 100 });
     cursor = String(result.cursor);
     for (const key of result.keys) {
       // Only check top-level room hashes (room:{code} — no colons after code)
@@ -345,7 +345,7 @@ async function getActiveRooms() {
 
   let cursor = '0';
   do {
-    const result = await redis.scan(Number(cursor), { MATCH: 'room:*', COUNT: 100 });
+    const result = await redis.scan(cursor, { MATCH: 'room:*', COUNT: 100 });
     cursor = String(result.cursor);
     for (const key of result.keys) {
       const parts = key.split(':');
