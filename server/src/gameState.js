@@ -11,6 +11,9 @@ const { v4: uuidv4 } = require('uuid');
 const cloudinary = require('cloudinary').v2;
 const { getRedisClient } = require('./redis');
 
+// In-memory cache for questions to avoid expensive deserialization and latency
+const questionsCache = new Map();
+
 /**
  * Generates a unique 6-digit room code, checking for collisions in Redis.
  * @returns {Promise<string>}
@@ -93,9 +96,12 @@ async function getRoom(code) {
  * @returns {Promise<Array>}
  */
 async function getQuestions(code) {
+  if (questionsCache.has(code)) return questionsCache.get(code);
   const redis = await getRedisClient();
   const raw = await redis.get(`room:${code}:questions`);
-  return raw ? JSON.parse(raw) : [];
+  const parsed = raw ? JSON.parse(raw) : [];
+  questionsCache.set(code, parsed);
+  return parsed;
 }
 
 /**
@@ -129,6 +135,7 @@ async function setRoomFields(code, fields) {
  * @param {Array} questions
  */
 async function setQuestions(code, questions) {
+  questionsCache.set(code, questions);
   const redis = await getRedisClient();
   await redis.set(`room:${code}:questions`, JSON.stringify(questions));
 }
@@ -290,6 +297,7 @@ async function removeRoom(code) {
   pipeline.del(`room:${code}:answered`);
   pipeline.del(`room:${code}:questions`);
   await pipeline.exec();
+  questionsCache.delete(code);
 
   // Cleanup Cloudinary images in background
   if (publicIds.length > 0) {
