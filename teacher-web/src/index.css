@@ -1,13 +1,5 @@
 @import 'tailwindcss';
 
-@font-face {
-  font-family: 'Pencilant';
-  src: url('/fonts/Pencilant.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 /* ===== Design Tokens ===== */
 :root {
   --bg-deep: #0a0a0a;
