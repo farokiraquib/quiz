@@ -173,11 +173,11 @@ export default function CreateQuiz({ onRoomCreated }) {
               style={{ animationDelay: `${qIndex * 80}ms` }}
             >
               {/* Question Header */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <span className="text-sm font-semibold text-[var(--text-muted)] tracking-wider uppercase">
                   Question {qIndex + 1}
                 </span>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3">
                   {/* Question Type */}
                   <select
                     value={q.type}
@@ -237,7 +237,7 @@ export default function CreateQuiz({ onRoomCreated }) {
                   id={`question-text-${qIndex}`}
                 />
                 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -323,7 +323,7 @@ export default function CreateQuiz({ onRoomCreated }) {
                           className="w-full bg-transparent border-none outline-none text-white placeholder-white/40 text-sm"
                           id={`question-${qIndex}-option-${optIndex}`}
                         />
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <input
                             type="file"
                             accept="image/*"

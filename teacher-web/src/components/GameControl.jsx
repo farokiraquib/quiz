@@ -107,17 +107,17 @@ export default function GameControl({
   };
 
   return (
-    <div className="screen-enter min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
-      <div className="absolute top-4 right-4">
-        <button 
-          onClick={() => setIsEditing(true)}
-          className="btn-ghost text-sm py-2 px-4"
-        >
-          Edit Upcoming Questions
-        </button>
-      </div>
+    <div className="screen-enter min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative">
+      <div className="max-w-3xl w-full relative mt-12 md:mt-0">
+        <div className="absolute -top-12 right-0 z-10">
+          <button 
+            onClick={() => setIsEditing(true)}
+            className="btn-ghost text-xs md:text-sm py-2 px-4"
+          >
+            Edit Upcoming Questions
+          </button>
+        </div>
 
-      <div className="max-w-3xl w-full">
         {/* Question Header */}
         <div className="flex items-center justify-between mb-6 animate-slide-in-down">
           <div className="glass-card px-4 py-2 flex items-center gap-2">
