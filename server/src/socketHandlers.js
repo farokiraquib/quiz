@@ -17,6 +17,7 @@ const {
   getScore,
   addScore,
   getAllPlayers,
+  getPlayerCount,
 } = require('./gameState');
 
 const { calculateScore, buildLeaderboard } = require('./leaderboard');
@@ -114,16 +115,16 @@ function registerHandlers(io) {
 
         socket.join(roomCode);
 
-        const playersMap = await getAllPlayers(roomCode);
+        const playerCount = await getPlayerCount(roomCode);
 
         // Notify the room that a new player joined
         io.to(roomCode).emit('room:player-joined', {
           id: socket.id,
           name: playerName,
-          playerCount: playersMap.size,
+          playerCount,
         });
 
-        console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${playersMap.size}`);
+        console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${playerCount}`);
         
         const questions = await getQuestions(roomCode);
         const imageUrls = [];
@@ -212,13 +213,11 @@ function registerHandlers(io) {
           return safeCallback({ success: false, error: 'Game is not currently active' });
         }
 
-        const alreadyAnswered = await hasAnswered(roomCode, socket.id);
-        if (alreadyAnswered) {
+        // Mark as answered (returns 1 if added, 0 if already existed)
+        const added = await markAnswered(roomCode, socket.id);
+        if (added === 0) {
           return safeCallback({ success: false, error: 'You have already answered this question' });
         }
-
-        // Mark as answered
-        await markAnswered(roomCode, socket.id);
 
         // Server-authoritative timing
         const timeTaken = Date.now() - room.questionStartTime;
@@ -250,15 +249,16 @@ function registerHandlers(io) {
         const maxTimeMs = currentQuestion.timeLimit * 1000;
         const score = calculateScore(accuracy, timeTaken, maxTimeMs);
 
-        await addScore(roomCode, socket.id, score);
-
-        const answeredCount = await getAnsweredCount(roomCode);
-        const playersMap = await getAllPlayers(roomCode);
+        const [_, answeredCount, totalPlayers] = await Promise.all([
+          addScore(roomCode, socket.id, score),
+          getAnsweredCount(roomCode),
+          getPlayerCount(roomCode)
+        ]);
 
         // Notify host ONLY with answer count
         io.to(room.hostSocketId).emit('game:answer-received', {
           answeredCount,
-          totalPlayers: playersMap.size,
+          totalPlayers,
         });
 
         console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${accuracy > 0 ? 'correct' : 'wrong'} (+${score})`);

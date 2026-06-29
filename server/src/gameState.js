@@ -371,8 +371,9 @@ async function getActiveRooms() {
  */
 async function markAnswered(code, socketId) {
   const redis = await getRedisClient();
-  await redis.sAdd(`room:${code}:answered`, socketId);
+  const added = await redis.sAdd(`room:${code}:answered`, socketId);
   await redis.expire(`room:${code}:answered`, 86400);
+  return added;
 }
 
 /**
