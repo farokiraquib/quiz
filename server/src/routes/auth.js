@@ -96,4 +96,40 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// ─── GET /api/auth/me ───────────────────────────────────────────────
+router.get('/me', require('../middleware/auth').authMiddleware, async (req, res) => {
+  try {
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: req.teacher.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        plan: true,
+        planExpiresAt: true,
+        roomsCreatedThisMonth: true,
+        lastRoomCreatedAt: true,
+      }
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    const PLAN_LIMITS = require('../config/plans');
+    const limits = PLAN_LIMITS[teacher.plan];
+
+    res.json({
+      success: true,
+      user: {
+        ...teacher,
+        limits,
+      }
+    });
+  } catch (err) {
+    console.error('[auth:me] Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

@@ -20,10 +20,23 @@ export default function Dashboard() {
     }
   });
 
+  const [fullProfile, setFullProfile] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem('livequizz_token');
     if (!token) {
       navigate('/login', { replace: true });
+    } else {
+      // Fetch full profile
+      fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setFullProfile(data.user);
+      })
+      .catch(err => console.error('Failed to fetch profile', err));
     }
   }, [navigate]);
 
@@ -228,22 +241,106 @@ export default function Dashboard() {
             <span className="text-base font-bold text-white tracking-tight">LiveQuizz</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative">
             {user && (
-              <div className="hidden sm:flex items-center gap-2 text-sm text-white/50">
+              <div 
+                className="hidden sm:flex items-center gap-2 text-sm text-white/50 cursor-pointer hover:bg-white/5 p-1.5 rounded-lg transition-colors"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+              >
                 <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center">
                   <User className="w-3.5 h-3.5 text-white/60" />
                 </div>
                 <span className="font-medium text-white/70">{user.name || user.email}</span>
               </div>
             )}
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors duration-200 px-3 py-1.5 rounded-lg hover:bg-white/5"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Log Out</span>
-            </button>
+            
+            {/* Profile Dropdown Menu */}
+            {showProfileMenu && fullProfile && (
+              <div className="absolute top-12 right-0 w-80 bg-[#163022] border border-white/10 rounded-xl shadow-2xl z-50 animate-fade-in-up overflow-hidden">
+                <div className="p-4 border-b border-white/10 bg-black/20">
+                  <h3 className="font-bold text-white text-lg">{fullProfile.name}</h3>
+                  <p className="text-sm text-white/50">{fullProfile.email}</p>
+                </div>
+                
+                <div className="p-4 space-y-4">
+                  {/* Plan Info */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/60 font-medium">Current Plan</span>
+                    <span className="bg-[#fcd34d] text-[#163022] text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide">
+                      {fullProfile.plan.replace('_', ' ')}
+                    </span>
+                  </div>
+                  
+                  {/* Validity */}
+                  {fullProfile.planExpiresAt && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-white/60 font-medium">Valid Until</span>
+                      <span className="text-sm text-white font-semibold">
+                        {new Date(fullProfile.planExpiresAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+
+                  <hr className="border-white/10" />
+
+                  {/* Usage */}
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Monthly Usage</h4>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-white/70">Rooms Created</span>
+                          <span className="text-white font-mono">
+                            {fullProfile.roomsCreatedThisMonth} / {fullProfile.limits.maxQuizzesPerMonth === -1 ? '∞' : fullProfile.limits.maxQuizzesPerMonth}
+                          </span>
+                        </div>
+                        {fullProfile.limits.maxQuizzesPerMonth !== -1 && (
+                          <div className="w-full bg-white/10 rounded-full h-1.5">
+                            <div 
+                              className="bg-yellow-400 h-1.5 rounded-full" 
+                              style={{ width: `${(fullProfile.roomsCreatedThisMonth / fullProfile.limits.maxQuizzesPerMonth) * 100}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between text-xs">
+                        <span className="text-white/70">Max Students / Room</span>
+                        <span className="text-white font-mono">
+                          {fullProfile.limits.maxStudentsPerRoom === -1 ? 'Unlimited' : fullProfile.limits.maxStudentsPerRoom}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2 border-t border-white/10 bg-black/20 flex gap-2">
+                  <button
+                    onClick={() => navigate('/pricing')}
+                    className="flex-1 text-xs font-bold bg-white/10 text-white py-2 rounded-lg hover:bg-white/20 transition-colors"
+                  >
+                    Upgrade Plan
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex-1 text-xs font-bold bg-red-500/10 text-red-400 py-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!user && (
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors duration-200 px-3 py-1.5 rounded-lg hover:bg-white/5"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            )}
           </div>
         </div>
       </nav>
