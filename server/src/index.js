@@ -86,6 +86,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/payments', paymentRoutes);
 
+// ─── Serve Frontend ──────────────────────────────────────────────────
+const path = require('path');
+const clientDistPath = path.join(__dirname, '../../teacher-web/dist');
+app.use(express.static(clientDistPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientDistPath, 'index.html'));
+});
+
 // ─── HTTP + Socket.io Server ─────────────────────────────────────────
 const server = http.createServer(app);
 

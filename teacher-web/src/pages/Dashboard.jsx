@@ -244,13 +244,13 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 relative">
             {user && (
               <div 
-                className="hidden sm:flex items-center gap-2 text-sm text-white/50 cursor-pointer hover:bg-white/5 p-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-2 text-sm text-white/50 cursor-pointer hover:bg-white/5 p-1.5 rounded-lg transition-colors"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
               >
                 <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center">
                   <User className="w-3.5 h-3.5 text-white/60" />
                 </div>
-                <span className="font-medium text-white/70">{user.name || user.email}</span>
+                <span className="hidden sm:inline font-medium text-white/70">{user.name || user.email}</span>
               </div>
             )}
             
