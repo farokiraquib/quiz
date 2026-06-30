@@ -118,12 +118,121 @@ function PricingCard({ title, duration, price, description, features, highlighte
   );
 }
 
+const PLAN_DETAILS = {
+  STARTER: { name: 'The Starter', price: 0 },
+  SEMESTER_PASS: { name: 'Semester Pass', price: 1499 },
+  ANNUAL_PRO: { name: 'The Annual Pro', price: 1999 },
+  INSTITUTE: { name: 'The Institute', price: 11999 }
+};
+
+function CheckoutModal({ planKey, onClose, onProceed }) {
+  const plan = PLAN_DETAILS[planKey];
+  const [promo, setPromo] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [error, setError] = useState('');
+  const [isValidating, setIsValidating] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState(null);
+
+  const handleApplyPromo = async () => {
+    if (!promo.trim()) return;
+    setIsValidating(true);
+    setError('');
+    try {
+      const res = await fetch(`${SERVER_URL}/api/payments/validate-promo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: promo })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscount(data.discountPercentage);
+        setAppliedPromo(promo.toUpperCase());
+        setError('');
+      } else {
+        setError(data.error);
+        setDiscount(0);
+        setAppliedPromo(null);
+      }
+    } catch (err) {
+      setError('Failed to validate promo code');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const finalPrice = Math.max(0, Math.round(plan.price * ((100 - discount) / 100)));
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-[#1b3a2a] border border-white/20 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white">✕</button>
+        <h2 className="text-2xl font-black text-white mb-6">Checkout</h2>
+        
+        <div className="bg-[#163022] border border-white/10 rounded-xl p-4 mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-white/80 font-semibold">{plan.name}</span>
+            <span className="text-white font-bold">₹{plan.price}</span>
+          </div>
+          {discount > 0 && (
+            <div className="flex justify-between items-center text-green-400 text-sm font-semibold">
+              <span>Discount ({discount}%)</span>
+              <span>-₹{plan.price - finalPrice}</span>
+            </div>
+          )}
+          <div className="border-t border-white/10 mt-3 pt-3 flex justify-between items-center">
+            <span className="text-white/60">Total</span>
+            <span className="text-2xl text-yellow-400 font-black">₹{finalPrice}</span>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-white/60 mb-2">Promo Code (Optional)</label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={promo}
+              onChange={e => {
+                setPromo(e.target.value);
+                setDiscount(0);
+                setAppliedPromo(null);
+                setError('');
+              }}
+              placeholder="Enter code"
+              className="flex-1 bg-[#163022] border border-white/20 text-white rounded-lg px-4 py-2 outline-none uppercase"
+            />
+            <button
+              onClick={handleApplyPromo}
+              disabled={isValidating || !promo.trim()}
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-4 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {isValidating ? '...' : 'Apply'}
+            </button>
+          </div>
+          {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+          {appliedPromo && <p className="text-green-400 text-xs mt-2">Promo code applied successfully!</p>}
+        </div>
+
+        <button
+          onClick={() => onProceed(appliedPromo)}
+          className="w-full bg-yellow-400 text-[#163022] font-bold py-3.5 rounded-xl hover:bg-yellow-300 shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none transition-all"
+        >
+          {finalPrice === 0 && discount === 100 ? 'Pay ₹1 to Verify & Claim' : `Pay ₹${finalPrice}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 import { SERVER_URL } from '../socket';
 
 export default function Pricing() {
   const [scrollY, setScrollY] = useState(0);
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Checkout Modal State
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlanKey, setSelectedPlanKey] = useState(null);
 
   useEffect(() => {
     // Load Razorpay script dynamically to avoid triggering global network scan prompts
@@ -141,7 +250,7 @@ export default function Pricing() {
     if (intendedPlan && token) {
       localStorage.removeItem('intended_plan');
       setTimeout(() => {
-        handlePayment(intendedPlan);
+        handlePlanSelection(intendedPlan);
       }, 500);
     }
 
@@ -153,14 +262,23 @@ export default function Pricing() {
     };
   }, []);
 
-  const handlePayment = async (planKey) => {
+  const handlePlanSelection = (planKey) => {
     const token = localStorage.getItem('livequizz_token');
-    const user = JSON.parse(localStorage.getItem('livequizz_user') || '{}');
     if (!token) {
       localStorage.setItem('intended_plan', planKey);
       navigate('/signup');
       return;
     }
+    setSelectedPlanKey(planKey);
+    setShowCheckout(true);
+  };
+
+  const handlePayment = async (promoCode = null) => {
+    const token = localStorage.getItem('livequizz_token');
+    const user = JSON.parse(localStorage.getItem('livequizz_user') || '{}');
+    const planKey = selectedPlanKey;
+
+    setShowCheckout(false);
 
     try {
       setIsProcessing(true);
@@ -170,12 +288,18 @@ export default function Pricing() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ plan: planKey })
+        body: JSON.stringify({ plan: planKey, promoCode })
       });
       const data = await res.json();
 
       if (!data.success) {
         alert('Failed to create order: ' + (data.error || 'Unknown error'));
+        return;
+      }
+
+      if (data.message === 'Switched to Starter plan') {
+        alert('You are now on the Starter Plan.');
+        navigate('/dashboard');
         return;
       }
 
@@ -235,6 +359,14 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#163022] text-white selection:bg-yellow-200 selection:text-black font-sans relative bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px]">
+      
+      {showCheckout && (
+        <CheckoutModal 
+          planKey={selectedPlanKey}
+          onClose={() => setShowCheckout(false)}
+          onProceed={handlePayment}
+        />
+      )}
 
       {/* ── Navbar ── */}
       <nav

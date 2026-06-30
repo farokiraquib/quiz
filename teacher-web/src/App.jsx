@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Pricing from './pages/Pricing';
+import Admin from './pages/Admin';
 
 /* ── Protected Route wrapper ── */
 function ProtectedRoute({ children }) {
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/admin" element={<Admin />} />
         <Route
           path="/dashboard"
           element={

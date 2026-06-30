@@ -22,19 +22,57 @@ const PLAN_PRICES = {
   INSTITUTE: 11999,
 };
 
+// Validate Promo Code
+router.post('/validate-promo', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'No code provided' });
+
+    const uppercaseCode = code.toUpperCase().trim();
+    const promo = await prisma.promoCode.findUnique({ where: { code: uppercaseCode } });
+
+    if (!promo || !promo.active) {
+      return res.status(404).json({ error: 'Invalid or inactive promo code' });
+    }
+
+    if (promo.maxUses !== null && promo.timesUsed >= promo.maxUses) {
+      return res.status(400).json({ error: 'Promo code usage limit reached' });
+    }
+
+    res.json({ success: true, discountPercentage: promo.discountPercentage });
+  } catch (error) {
+    console.error('Error validating promo code:', error);
+    res.status(500).json({ error: 'Failed to validate promo code' });
+  }
+});
+
 // Create Order
 router.post('/create-order', async (req, res) => {
   try {
-    const { plan } = req.body;
+    const { plan, promoCode } = req.body;
     
     if (!plan || !PLAN_PRICES.hasOwnProperty(plan)) {
       return res.status(400).json({ error: 'Invalid plan selected' });
     }
     
-    const amount = PLAN_PRICES[plan] * 100; // in paise
-    
-    if (amount === 0) {
-      // Free plan upgrade (downgrade) directly
+    let amount = PLAN_PRICES[plan] * 100; // in paise
+    let notes = {};
+
+    // Handle Promo Code
+    if (promoCode) {
+      const uppercaseCode = promoCode.toUpperCase().trim();
+      const promo = await prisma.promoCode.findUnique({ where: { code: uppercaseCode } });
+      
+      if (promo && promo.active && (promo.maxUses === null || promo.timesUsed < promo.maxUses)) {
+        // Apply discount
+        const discountPercentage = promo.discountPercentage;
+        amount = Math.round(amount * ((100 - discountPercentage) / 100));
+        notes.promoCode = uppercaseCode;
+      }
+    }
+
+    // Free plan bypass (only for STARTER, or if a bug made a paid plan 0 without promo)
+    if (amount === 0 && !promoCode) {
       const updated = await prisma.teacher.update({
         where: { id: req.teacher.id },
         data: { plan: 'STARTER', razorpayOrderId: null, razorpayPaymentId: null }
@@ -42,10 +80,16 @@ router.post('/create-order', async (req, res) => {
       return res.json({ success: true, plan: updated.plan, message: 'Switched to Starter plan' });
     }
 
+    // Minimum 1 INR for Razorpay if 100% discount was applied to a paid plan
+    if (amount === 0 && promoCode) {
+      amount = 100; // 1 INR in paise
+    }
+
     const options = {
       amount,
       currency: 'INR',
-      receipt: `rcpt_${req.teacher.id.substring(0,8)}_${Date.now()}`
+      receipt: `rcpt_${req.teacher.id.substring(0,8)}_${Date.now()}`,
+      notes
     };
 
     const order = await razorpay.orders.create(options);
@@ -81,6 +125,20 @@ router.post('/verify', async (req, res) => {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
+      // Check if a promo code was used by fetching the order from Razorpay
+      try {
+        const order = await razorpay.orders.fetch(razorpay_order_id);
+        if (order && order.notes && order.notes.promoCode) {
+          await prisma.promoCode.update({
+            where: { code: order.notes.promoCode },
+            data: { timesUsed: { increment: 1 } }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to update promo code usage:', err);
+        // Don't fail the verification if this fails
+      }
+
       // Calculate expiration date (e.g. 6 months for SEMESTER, 12 for PRO/INSTITUTE)
       let planExpiresAt = new Date();
       if (plan === 'SEMESTER_PASS') {
