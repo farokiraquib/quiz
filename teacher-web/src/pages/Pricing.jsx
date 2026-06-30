@@ -137,10 +137,16 @@ function CheckoutModal({ planKey, onClose, onProceed }) {
     if (!promo.trim()) return;
     setIsValidating(true);
     setError('');
+    
+    const token = localStorage.getItem('livequizz_token');
+    
     try {
       const res = await fetch(`${SERVER_URL}/api/payments/validate-promo`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ code: promo })
       });
       const data = await res.json();
