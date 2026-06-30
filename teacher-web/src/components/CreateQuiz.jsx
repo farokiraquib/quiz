@@ -111,7 +111,8 @@ export default function CreateQuiz({ onRoomCreated }) {
     socket.connect();
 
     socket.once('connect', () => {
-      socket.emit('host:create-room', { questions, customRoomCode, password }, (response) => {
+      const token = localStorage.getItem('livequizz_token');
+      socket.emit('host:create-room', { questions, customRoomCode, password, token }, (response) => {
         setIsCreating(false);
         if (response?.roomCode) {
           onRoomCreated(response.roomCode, response.hostSecret, questions);

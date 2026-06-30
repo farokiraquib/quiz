@@ -10,12 +10,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PlanType {
+  STARTER
+  SEMESTER_PASS
+  ANNUAL_PRO
+  INSTITUTE
+}
+
 model Teacher {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  createdAt    DateTime @default(now())
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String
+  name              String
+  createdAt         DateTime  @default(now())
+  plan              PlanType  @default(STARTER)
+  planExpiresAt     DateTime?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  roomsCreatedThisMonth Int @default(0)
+  lastRoomCreatedAt DateTime?
 
   quizzes Quiz[]
 }

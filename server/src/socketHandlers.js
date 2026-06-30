@@ -22,6 +22,10 @@ const {
 } = require('./gameState');
 
 const { calculateScore, buildLeaderboard } = require('./leaderboard');
+const jwt = require('jsonwebtoken');
+const prisma = require('./prisma');
+const PLAN_LIMITS = require('./config/plans');
+const JWT_SECRET = process.env.JWT_SECRET || 'livequizz-dev-secret-change-in-production';
 
 /**
  * Registers all Socket.io event handlers on the given io instance.
@@ -37,6 +41,51 @@ function registerHandlers(io) {
         if (!data || !Array.isArray(data.questions) || data.questions.length === 0) {
           return callback({ success: false, error: 'Questions array is required' });
         }
+        
+        if (!data.token) {
+          return callback({ success: false, error: 'Authentication required' });
+        }
+
+        let decoded;
+        try {
+          decoded = jwt.verify(data.token, JWT_SECRET);
+        } catch (err) {
+          return callback({ success: false, error: 'Invalid or expired token' });
+        }
+
+        const teacher = await prisma.teacher.findUnique({ where: { id: decoded.id } });
+        if (!teacher) {
+          return callback({ success: false, error: 'Teacher not found' });
+        }
+
+        const planLimits = PLAN_LIMITS[teacher.plan];
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        let roomsCreatedThisMonth = teacher.roomsCreatedThisMonth;
+        let lastRoomCreatedAt = teacher.lastRoomCreatedAt;
+
+        if (lastRoomCreatedAt) {
+          const lastMonth = lastRoomCreatedAt.getMonth();
+          const lastYear = lastRoomCreatedAt.getFullYear();
+          if (lastMonth !== currentMonth || lastYear !== currentYear) {
+            roomsCreatedThisMonth = 0;
+          }
+        }
+
+        if (planLimits.maxQuizzesPerMonth !== -1 && roomsCreatedThisMonth >= planLimits.maxQuizzesPerMonth) {
+          return callback({ success: false, error: `You have reached your limit of ${planLimits.maxQuizzesPerMonth} rooms for this month on the ${teacher.plan} plan. Please upgrade to create more.` });
+        }
+
+        // Update usage in DB
+        await prisma.teacher.update({
+          where: { id: teacher.id },
+          data: {
+            roomsCreatedThisMonth: roomsCreatedThisMonth + 1,
+            lastRoomCreatedAt: now,
+          }
+        });
 
         const { code: roomCode, hostSecret } = await createRoom(
           socket.id, 
@@ -44,6 +93,13 @@ function registerHandlers(io) {
           data.customRoomCode, 
           data.password
         );
+        
+        // Store teacher plan info in room for students limit check
+        await setRoomFields(roomCode, {
+          teacherId: teacher.id,
+          plan: teacher.plan,
+        });
+
         socket.join(roomCode);
 
         console.log(`[Room] Created: ${roomCode} by host ${socket.id}`);
@@ -109,6 +165,14 @@ function registerHandlers(io) {
           return callback({ success: false, error: 'Incorrect password' });
         }
 
+        const playerCount = await getPlayerCount(roomCode);
+        const plan = room.plan || 'STARTER';
+        const planLimits = PLAN_LIMITS[plan];
+
+        if (planLimits.maxStudentsPerRoom !== -1 && playerCount >= planLimits.maxStudentsPerRoom) {
+          return callback({ success: false, error: `This room has reached its maximum capacity of ${planLimits.maxStudentsPerRoom} students.` });
+        }
+
         const player = await addPlayer(roomCode, socket.id, playerName);
         if (!player) {
           return callback({ success: false, error: 'Failed to join room' });
@@ -116,13 +180,12 @@ function registerHandlers(io) {
 
         socket.join(roomCode);
 
-        const playerCount = await getPlayerCount(roomCode);
-
-        // Notify the room that a new player joined
+        // Notify the room that a new player joined (use playerCount + 1 since we just added one)
+        const updatedPlayerCount = playerCount + 1;
         io.to(roomCode).emit('room:player-joined', {
           id: socket.id,
           name: playerName,
-          playerCount,
+          playerCount: updatedPlayerCount,
         });
 
         console.log(`[Room ${roomCode}] Player joined: ${playerName} (${socket.id}), total: ${playerCount}`);

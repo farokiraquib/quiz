@@ -13,6 +13,7 @@ const { registerHandlers } = require('./socketHandlers');
 const { getRedisClient, getSubscriberClient } = require('./redis');
 const authRoutes = require('./routes/auth');
 const quizRoutes = require('./routes/quiz');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // ─── Cloudinary Config ───────────────────────────────────────────────
 cloudinary.config({
@@ -83,6 +84,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
 // ─── API Routes ──────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // ─── HTTP + Socket.io Server ─────────────────────────────────────────
 const server = http.createServer(app);

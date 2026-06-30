@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Hexagon,
   CheckCircle2,
@@ -90,29 +90,125 @@ function PricingCard({ title, duration, price, description, features, highlighte
           ))}
         </ul>
         
-        <Link
-          to="/signup"
-          className={`w-full text-center font-bold text-lg px-6 py-4 rounded-xl transition-all ${
-            highlighted
-              ? 'bg-[#fcd34d] text-[#163022] hover:bg-[#fde68a] shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none'
-              : 'bg-white/10 text-white hover:bg-white/20 border-2 border-white/20'
-          }`}
-        >
-          {price === '₹0' ? 'Get Started' : 'Choose Plan'}
-        </Link>
+        {price === '₹0' ? (
+          <Link
+            to="/signup"
+            className={`w-full text-center font-bold text-lg px-6 py-4 rounded-xl transition-all ${
+              highlighted
+                ? 'bg-[#fcd34d] text-[#163022] hover:bg-[#fde68a] shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none'
+                : 'bg-white/10 text-white hover:bg-white/20 border-2 border-white/20'
+            }`}
+          >
+            Get Started
+          </Link>
+        ) : (
+          <button
+            onClick={() => onSelectPlan && onSelectPlan()}
+            className={`w-full text-center font-bold text-lg px-6 py-4 rounded-xl transition-all ${
+              highlighted
+                ? 'bg-[#fcd34d] text-[#163022] hover:bg-[#fde68a] shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none'
+                : 'bg-white/10 text-white hover:bg-white/20 border-2 border-white/20'
+            }`}
+          >
+            Choose Plan
+          </button>
+        )}
       </div>
     </AnimatedSection>
   );
 }
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+
 export default function Pricing() {
   const [scrollY, setScrollY] = useState(0);
+  const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handlePayment = async (planKey) => {
+    const token = localStorage.getItem('livequizz_token');
+    const user = JSON.parse(localStorage.getItem('livequizz_user') || '{}');
+    if (!token) {
+      navigate('/signup');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const res = await fetch(`${SERVER_URL}/api/payments/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ plan: planKey })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert('Failed to create order: ' + (data.error || 'Unknown error'));
+        return;
+      }
+
+      const options = {
+        key: 'rzp_test_So7egikyu7MjeY',
+        amount: data.amount,
+        currency: data.currency,
+        name: 'LiveQuizz',
+        description: `Upgrade to ${planKey}`,
+        order_id: data.order_id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await fetch(`${SERVER_URL}/api/payments/verify`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                plan: planKey
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              alert('Payment successful! Your plan has been upgraded.');
+              navigate('/dashboard');
+            } else {
+              alert('Payment verification failed.');
+            }
+          } catch (err) {
+            alert('Error verifying payment.');
+          }
+        },
+        prefill: {
+          name: user.name || '',
+          email: user.email || '',
+        },
+        theme: {
+          color: '#163022'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        alert('Payment failed: ' + response.error.description);
+      });
+      rzp.open();
+    } catch (err) {
+      alert('Error initiating payment.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#163022] text-white selection:bg-yellow-200 selection:text-black font-sans relative bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px]">
@@ -202,6 +298,7 @@ export default function Pricing() {
               price="₹1,499"
               description="Perfect for short crash courses or a single academic term."
               delay={100}
+              onSelectPlan={() => handlePayment('SEMESTER_PASS')}
               features={[
                 "Up to 150 students per quiz",
                 "Unlimited quizzes",
@@ -216,6 +313,7 @@ export default function Pricing() {
               description="Perfect for full-time independent teachers wanting year-round access."
               highlighted={true}
               delay={200}
+              onSelectPlan={() => handlePayment('ANNUAL_PRO')}
               features={[
                 "Up to 150 students per quiz",
                 "Unlimited quizzes",
@@ -230,6 +328,7 @@ export default function Pricing() {
               price="₹11,999"
               description="Perfect for coaching centers and private schools."
               delay={300}
+              onSelectPlan={() => handlePayment('INSTITUTE')}
               features={[
                 "10 Teacher Accounts included",
                 "Up to 500 students per quiz (Run Mega Tests)",
