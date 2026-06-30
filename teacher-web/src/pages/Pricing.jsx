@@ -126,6 +126,12 @@ export default function Pricing() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
+    // Load Razorpay script dynamically to avoid triggering global network scan prompts
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
     
@@ -139,7 +145,12 @@ export default function Pricing() {
       }, 500);
     }
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
   }, []);
 
   const handlePayment = async (planKey) => {
