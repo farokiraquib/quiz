@@ -119,74 +119,79 @@ export default function GameControl({
         </div>
 
         {/* Question Header */}
-        <div className="flex items-center justify-between mb-6 animate-slide-in-down">
-          <div className="glass-card px-4 py-2 flex items-center gap-2">
-            <span className="text-sm text-[var(--text-muted)]">Question</span>
-            <span className="text-lg font-bold text-white">
+        <div className="flex items-center justify-between mb-8 animate-slide-in-down">
+          <div className="glass-card px-5 py-2.5 flex items-center gap-3 border-[var(--border-subtle)]">
+            <span className="text-xl">🎯</span>
+            <span className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">Question</span>
+            <span className="text-xl font-black text-white">
               {questionIndex + 1}
-              <span className="text-[var(--text-dimmed)]"> / {totalQuestions}</span>
+              <span className="text-white/30 text-lg"> / {totalQuestions}</span>
             </span>
           </div>
           <div
-            className={`glass-card px-4 py-2 flex items-center gap-2 ${
-              isTimerCritical ? 'border-red-500/50' : ''
+            className={`glass-card px-5 py-2.5 flex items-center gap-3 border-2 ${
+              isTimerCritical ? 'border-red-500 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'border-[var(--accent-secondary)] bg-[var(--accent-secondary)]/10 shadow-[0_0_20px_rgba(6,182,212,0.2)]'
             }`}
           >
-            <span className={`text-2xl font-bold tabular-nums ${
+            <span className="text-xl">⏱️</span>
+            <span className={`text-3xl font-black tabular-nums ${
               isTimerCritical
                 ? 'text-red-400'
                 : isTimerDone
-                ? 'text-[var(--text-dimmed)]'
-                : 'text-white'
+                ? 'text-white/30'
+                : 'text-[var(--accent-secondary)] drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]'
             }`}
               style={isTimerCritical ? { animation: 'countdown-pulse 1s ease-in-out infinite' } : {}}
             >
-              {timeLeft}s
+              {timeLeft}
+              <span className="text-lg opacity-50 ml-1">s</span>
             </span>
           </div>
         </div>
 
         {/* Timer Bar */}
-        <div className="w-full h-2 rounded-full bg-white/5 mb-8 overflow-hidden animate-fade-in">
+        <div className="w-full h-3 rounded-full bg-white/5 mb-10 overflow-hidden shadow-inner animate-fade-in border border-white/5">
           <div
-            className="h-full rounded-full transition-all duration-1000 linear"
-            style={{
-              width: `${timerPercent}%`,
-              background: 'var(--text-primary)',
-            }}
+            className={`h-full rounded-full transition-all duration-1000 linear ${
+              isTimerCritical ? 'bg-gradient-to-r from-red-600 to-red-400 shadow-[0_0_15px_rgba(239,68,68,0.8)]' : 'bg-gradient-to-r from-[var(--accent-secondary)] to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.8)]'
+            }`}
+            style={{ width: `${timerPercent}%` }}
           />
         </div>
 
         {/* Question Card */}
-        <div className="glass-card-accent p-6 md:p-8 mb-6 animate-fade-in-up flex flex-col items-center">
+        <div className="glass-card-accent p-8 md:p-12 mb-8 animate-fade-in-up flex flex-col items-center border-[var(--accent-primary-glow)] bg-[var(--bg-surface-active)]">
           {question?.imageUrl && (
-            <img src={question.imageUrl} alt="Question" className="max-h-48 rounded mb-4 object-contain" />
+            <div className="p-2 bg-white/5 rounded-2xl mb-6 shadow-xl border border-white/10">
+              <img src={question.imageUrl} alt="Question" className="max-h-56 rounded-xl object-contain" />
+            </div>
           )}
-          <h2 className="text-xl md:text-2xl font-bold text-white text-center leading-relaxed">
+          <h2 className="text-3xl md:text-5xl font-black text-white text-center leading-tight drop-shadow-md">
             {question?.text || 'Loading question...'}
           </h2>
         </div>
 
         {/* Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
           {question?.options?.map((opt, i) => (
             <div
               key={i}
-              className="rounded-xl p-4 flex items-center gap-3 animate-fade-in-up"
+              className="relative rounded-2xl p-5 flex items-center gap-4 animate-fade-in-up shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:-translate-y-1 transition-transform overflow-hidden"
               style={{
-                background: OPTION_COLORS[i].bg,
+                background: `linear-gradient(135deg, ${OPTION_COLORS[i].bg}, #0a0a0a)`,
                 animationDelay: `${i * 80}ms`,
-                border: '1px solid var(--border-subtle)',
+                border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-sm font-bold text-white shrink-0">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none" />
+              <span className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-lg font-black text-white shrink-0 drop-shadow-md">
                 {OPTION_COLORS[i].label}
               </span>
-              <div className="flex flex-col flex-1">
+              <div className="flex flex-col flex-1 z-10">
                 {opt?.imageUrl && (
-                  <img src={opt.imageUrl} alt="Option" className="max-h-20 rounded mb-2 object-contain" />
+                  <img src={opt.imageUrl} alt="Option" className="max-h-24 rounded-lg mb-3 object-contain border border-white/10 bg-black/20" />
                 )}
-                <span className="text-white font-medium text-sm md:text-base">
+                <span className="text-white font-bold text-lg md:text-xl drop-shadow-sm">
                   {opt?.text || opt}
                 </span>
               </div>
@@ -195,21 +200,21 @@ export default function GameControl({
         </div>
 
         {/* Answer Progress */}
-        <div className="glass-card p-5 mb-6 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-[var(--text-muted)]">Responses</span>
-            <span className="text-lg font-bold">
-              <span className="text-white">{answeredCount}</span>
-              <span className="text-[var(--text-dimmed)]"> / {totalPlayers}</span>
+        <div className="glass-card p-6 mb-8 animate-fade-in-up border-[var(--border-subtle)]" style={{ animationDelay: '300ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📈</span>
+              <span className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider">Responses</span>
+            </div>
+            <span className="text-xl font-black">
+              <span className="text-white bg-white/10 px-3 py-1 rounded-lg mr-2">{answeredCount}</span>
+              <span className="text-white/40">/ {totalPlayers}</span>
             </span>
           </div>
-          <div className="w-full h-3 rounded-full bg-white/5 overflow-hidden">
+          <div className="w-full h-4 rounded-full bg-black/40 overflow-hidden shadow-inner border border-white/5">
             <div
-              className="h-full rounded-full transition-all duration-300 ease-out"
-              style={{
-                width: `${answerPercent}%`,
-                background: 'var(--text-primary)',
-              }}
+              className="h-full rounded-full transition-all duration-300 ease-out bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] shadow-[0_0_10px_var(--accent-primary-glow)]"
+              style={{ width: `${answerPercent}%` }}
             />
           </div>
         </div>

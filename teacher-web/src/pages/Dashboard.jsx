@@ -232,41 +232,41 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
       {/* Dashboard Navbar */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-black" />
+      <nav className="sticky top-0 z-50 bg-[var(--bg-deep)]/80 backdrop-blur-[20px] border-b border-white/5 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => { if(screen !== 'create') setScreen('create') }}>
+            <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary)] flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.5)] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <span className="text-base font-bold text-white tracking-tight">LiveQuizz</span>
+            <span className="text-xl font-black text-white tracking-tight font-serif">LiveQuizz</span>
           </div>
 
           <div className="flex items-center gap-4 relative">
             {user && (
               <div 
-                className="flex items-center gap-2 text-sm text-white/50 cursor-pointer hover:bg-white/5 p-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-3 text-sm text-white/50 cursor-pointer hover:bg-white/5 px-3 py-2 rounded-xl transition-all border border-transparent hover:border-white/10"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
               >
-                <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-white/60" />
+                <span className="hidden sm:inline font-bold text-white/80">{user.name || user.email}</span>
+                <div className="w-8 h-8 rounded-full bg-[var(--accent-primary-glow)] border-2 border-[var(--accent-primary)] flex items-center justify-center shadow-[0_0_10px_var(--accent-primary-glow)]">
+                  <User className="w-4 h-4 text-[var(--accent-primary)]" />
                 </div>
-                <span className="hidden sm:inline font-medium text-white/70">{user.name || user.email}</span>
               </div>
             )}
             
             {/* Profile Dropdown Menu */}
             {showProfileMenu && fullProfile && (
-              <div className="absolute top-12 right-0 w-80 bg-[#163022] border border-white/10 rounded-xl shadow-2xl z-50 animate-fade-in-up overflow-hidden">
-                <div className="p-4 border-b border-white/10 bg-black/20">
-                  <h3 className="font-bold text-white text-lg">{fullProfile.name}</h3>
-                  <p className="text-sm text-white/50">{fullProfile.email}</p>
+              <div className="absolute top-14 right-0 w-80 glass-card !bg-[var(--bg-surface-active)] !border-white/10 shadow-2xl z-50 animate-fade-in-up overflow-hidden">
+                <div className="p-5 border-b border-white/5 bg-gradient-to-br from-[var(--accent-primary-glow)] to-transparent">
+                  <h3 className="font-black text-white text-xl mb-1">{fullProfile.name}</h3>
+                  <p className="text-sm text-white/60 font-medium">{fullProfile.email}</p>
                 </div>
                 
-                <div className="p-4 space-y-4">
+                <div className="p-5 space-y-5">
                   {/* Plan Info */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-white/60 font-medium">Current Plan</span>
-                    <span className="bg-[#fcd34d] text-[#163022] text-xs font-bold px-2 py-1 rounded-md uppercase tracking-wide">
+                    <span className="text-sm text-white/60 font-bold">Current Plan</span>
+                    <span className="bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-[0_0_10px_rgba(251,191,36,0.3)]">
                       {fullProfile.plan.replace('_', ' ')}
                     </span>
                   </div>
@@ -274,57 +274,67 @@ export default function Dashboard() {
                   {/* Validity */}
                   {fullProfile.planExpiresAt && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-white/60 font-medium">Valid Until</span>
-                      <span className="text-sm text-white font-semibold">
+                      <span className="text-sm text-white/60 font-bold">Valid Until</span>
+                      <span className="text-sm text-white font-black">
                         {new Date(fullProfile.planExpiresAt).toLocaleDateString()}
                       </span>
                     </div>
                   )}
 
-                  <hr className="border-white/10" />
+                  <hr className="border-white/5" />
 
                   {/* Usage */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-white/40 mb-3">Monthly Usage</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--accent-secondary)] mb-4">Monthly Usage Status</h4>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-white/70">Rooms Created</span>
-                          <span className="text-white font-mono">
+                        <div className="flex justify-between text-xs mb-2 font-bold">
+                          <span className="text-white/80">Rooms Created</span>
+                          <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded">
                             {fullProfile.roomsCreatedThisMonth} / {fullProfile.limits.maxQuizzesPerMonth === -1 ? '∞' : fullProfile.limits.maxQuizzesPerMonth}
                           </span>
                         </div>
                         {fullProfile.limits.maxQuizzesPerMonth !== -1 && (
-                          <div className="w-full bg-white/10 rounded-full h-1.5">
+                          <div className="w-full bg-black/40 rounded-full h-2 overflow-hidden shadow-inner border border-white/5">
                             <div 
-                              className="bg-yellow-400 h-1.5 rounded-full" 
+                              className="bg-gradient-to-r from-[var(--accent-secondary)] to-blue-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_var(--accent-secondary-glow)]" 
                               style={{ width: `${(fullProfile.roomsCreatedThisMonth / fullProfile.limits.maxQuizzesPerMonth) * 100}%` }}
                             />
                           </div>
                         )}
                       </div>
                       
-                      <div className="flex justify-between text-xs">
-                        <span className="text-white/70">Max Students / Room</span>
-                        <span className="text-white font-mono">
+                      <div className="flex justify-between text-xs font-bold items-center">
+                        <span className="text-white/80">Max Students / Room</span>
+                        <span className="text-white font-mono bg-white/10 px-2 py-0.5 rounded">
                           {fullProfile.limits.maxStudentsPerRoom === -1 ? 'Unlimited' : fullProfile.limits.maxStudentsPerRoom}
                         </span>
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Institute Notice */}
+                  {fullProfile.plan === 'INSTITUTE' && (
+                    <div className="mt-4 p-3 rounded-xl bg-[var(--accent-primary-glow)] border border-[var(--accent-primary)]/30 text-center">
+                      <p className="text-xs text-white/80 font-bold">Team Management</p>
+                      <button className="mt-2 text-[10px] uppercase tracking-widest font-black text-[var(--accent-primary)] hover:text-white transition-colors">
+                        Contact Support to add teachers
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-2 border-t border-white/10 bg-black/20 flex gap-2">
+                <div className="p-3 border-t border-white/5 bg-black/40 flex gap-3">
                   <button
                     onClick={() => navigate('/pricing')}
-                    className="flex-1 text-xs font-bold bg-white/10 text-white py-2 rounded-lg hover:bg-white/20 transition-colors"
+                    className="flex-1 text-xs font-black bg-white/10 text-white py-2.5 rounded-xl hover:bg-white/20 transition-all hover:scale-[1.02]"
                   >
                     Upgrade Plan
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex-1 text-xs font-bold bg-red-500/10 text-red-400 py-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                    className="flex-1 text-xs font-black bg-red-500/10 text-red-400 py-2.5 rounded-xl hover:bg-red-500/20 transition-all hover:scale-[1.02]"
                   >
                     Log Out
                   </button>
@@ -382,6 +392,8 @@ export default function Dashboard() {
             isGameOver={isGameOver || screen === 'finished'}
             onNextQuestion={handleNextQuestion}
             onBackHome={handleEndGame}
+            plan={fullProfile?.plan || 'FREE'}
+            roomCode={roomCode}
           />
         )}
       </div>

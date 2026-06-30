@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const OPTION_COLORS = ['#171717', '#171717', '#171717', '#171717'];
+const OPTION_COLORS = ['rgba(6, 182, 212, 0.8)', 'rgba(139, 92, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)'];
 const OPTION_ICONS = ['▲', '◆', '●', '■'];
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -117,8 +117,8 @@ export default function QuestionScreen({
         // Tap feedback animation
         Animated.sequence([
           Animated.timing(selectedScale, {
-            toValue: 0.98,
-            duration: 80,
+            toValue: 0.95,
+            duration: 100,
             useNativeDriver: true,
           }),
           Animated.spring(selectedScale, {
@@ -193,14 +193,14 @@ export default function QuestionScreen({
 
   const timerColor =
     timeLeft > timeLimit * 0.5
-      ? '#fafafa'
+      ? '#10b981'
       : timeLeft > timeLimit * 0.25
-      ? '#a3a3a3'
-      : '#525252';
+      ? '#f59e0b'
+      : '#ef4444';
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
+      <StatusBar barStyle="light-content" backgroundColor="#09090e" />
 
       <Animated.View style={[styles.content, { opacity: fadeIn }]}>
         {/* Timer bar */}
@@ -287,15 +287,15 @@ export default function QuestionScreen({
                 <TouchableOpacity
                   style={[
                     styles.optionButton,
-                    { backgroundColor: OPTION_COLORS[index] },
+                    { backgroundColor: OPTION_COLORS[index % OPTION_COLORS.length] },
                     hasAnswered && !isSelected && styles.optionDimmed,
                     isSelected && styles.optionSelected,
                   ]}
                   onPress={() => handleOptionPress(index)}
                   disabled={hasAnswered}
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.optionIcon}>{OPTION_ICONS[index]}</Text>
+                  <Text style={styles.optionIcon}>{OPTION_ICONS[index % OPTION_ICONS.length]}</Text>
                   {option?.imageUrl && (
                     <Image 
                       source={{ uri: option.imageUrl }} 
@@ -335,23 +335,24 @@ export default function QuestionScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#09090e',
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
+    paddingBottom: 24,
   },
   timerContainer: {
-    height: 4,
-    backgroundColor: '#171717',
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 16,
   },
   timerBar: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   timerTextContainer: {
     flexDirection: 'row',
@@ -360,21 +361,26 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   timerText: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 28,
+    fontWeight: '900',
     letterSpacing: -0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   questionNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#737373',
-    backgroundColor: 'transparent',
-    paddingHorizontal: 0,
-    paddingVertical: 0,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#06b6d4',
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
     letterSpacing: 1,
+    overflow: 'hidden',
   },
   questionContainer: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: 'rgba(20, 20, 30, 0.8)',
     borderRadius: 24,
     padding: 24,
     marginBottom: 24,
@@ -382,7 +388,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#8b5cf6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 5,
   },
   questionImage: {
     width: '100%',
@@ -391,27 +402,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   questionText: {
-    fontSize: 24,
-    fontWeight: '500',
-    color: '#fafafa',
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#ffffff',
     textAlign: 'center',
-    lineHeight: 34,
+    lineHeight: 36,
     letterSpacing: -0.5,
   },
   waitingBadge: {
     alignSelf: 'center',
-    backgroundColor: '#171717',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 100,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: '#10b981',
   },
   waitingText: {
-    color: '#a3a3a3',
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#10b981',
+    fontSize: 16,
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
   optionsGrid: {
@@ -420,32 +431,43 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignContent: 'center',
-    gap: 12,
+    gap: 16,
   },
   optionWrapper: {
-    width: '48%',
+    width: '47%',
+    marginBottom: 16,
   },
   optionButton: {
-    height: 100,
-    borderRadius: 16,
+    height: 120,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#262626',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   optionDimmed: {
     opacity: 0.4,
   },
   optionSelected: {
-    borderWidth: 1,
-    borderColor: '#fafafa',
-    backgroundColor: '#262626',
+    borderWidth: 3,
+    borderColor: '#ffffff',
+    shadowColor: '#ffffff',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
   optionIcon: {
-    fontSize: 18,
-    color: '#737373',
+    fontSize: 24,
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   optionImage: {
     width: '100%',
@@ -454,26 +476,37 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   optionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#e5e5e5',
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#ffffff',
     textAlign: 'center',
     letterSpacing: -0.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   submitButton: {
-    backgroundColor: '#fafafa',
+    backgroundColor: '#8b5cf6',
     borderRadius: 16,
     paddingVertical: 18,
-    marginTop: 24,
+    marginTop: 12,
     alignItems: 'center',
+    shadowColor: '#8b5cf6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
   submitButtonDisabled: {
-    backgroundColor: '#262626',
-    opacity: 0.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   submitButtonText: {
-    color: '#0a0a0a',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

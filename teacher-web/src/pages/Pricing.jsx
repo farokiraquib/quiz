@@ -453,7 +453,7 @@ export default function Pricing() {
               price="₹1,499"
               description="Perfect for short crash courses or a single academic term."
               delay={100}
-              onSelectPlan={() => handlePayment('SEMESTER_PASS')}
+              onSelectPlan={() => handlePlanSelection('SEMESTER_PASS')}
               features={[
                 "Up to 150 students per quiz",
                 "Unlimited quizzes",
@@ -468,7 +468,7 @@ export default function Pricing() {
               description="Perfect for full-time independent teachers wanting year-round access."
               highlighted={true}
               delay={200}
-              onSelectPlan={() => handlePayment('ANNUAL_PRO')}
+              onSelectPlan={() => handlePlanSelection('ANNUAL_PRO')}
               features={[
                 "Up to 150 students per quiz",
                 "Unlimited quizzes",
@@ -483,7 +483,7 @@ export default function Pricing() {
               price="₹11,999"
               description="Perfect for coaching centers and private schools."
               delay={300}
-              onSelectPlan={() => handlePayment('INSTITUTE')}
+              onSelectPlan={() => handlePlanSelection('INSTITUTE')}
               features={[
                 "10 Teacher Accounts included",
                 "Up to 500 students per quiz (Run Mega Tests)",
