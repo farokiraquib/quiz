@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import socket from '../socket';
+import socket, { SERVER_URL } from '../socket';
 import useSocket from '../hooks/useSocket';
 import CreateQuiz from '../components/CreateQuiz';
 import Lobby from '../components/Lobby';
@@ -29,7 +29,7 @@ export default function Dashboard() {
       navigate('/login', { replace: true });
     } else {
       // Fetch full profile
-      fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/auth/me`, {
+      fetch(`${SERVER_URL}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())

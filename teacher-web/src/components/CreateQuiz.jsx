@@ -108,19 +108,24 @@ export default function CreateQuiz({ onRoomCreated }) {
     setError('');
     setIsCreating(true);
 
-    socket.connect();
-
-    socket.once('connect', () => {
+    const emitCreateRoom = () => {
       const token = localStorage.getItem('livequizz_token');
       socket.emit('host:create-room', { questions, customRoomCode, password, token }, (response) => {
         setIsCreating(false);
-        if (response?.roomCode) {
+        if (response?.success && response?.roomCode) {
           onRoomCreated(response.roomCode, response.hostSecret, questions);
         } else {
           setError(response?.error || 'Failed to create room');
         }
       });
-    });
+    };
+
+    if (socket.connected) {
+      emitCreateRoom();
+    } else {
+      socket.once('connect', emitCreateRoom);
+      socket.connect();
+    }
 
     // Timeout fallback
     setTimeout(() => {
