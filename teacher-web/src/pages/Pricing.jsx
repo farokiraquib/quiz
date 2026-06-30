@@ -50,7 +50,7 @@ function AnimatedSection({ children, className = '', delay = 0 }) {
 }
 
 /* ── Pricing Card ── */
-function PricingCard({ title, duration, price, description, features, highlighted = false, delay = 0 }) {
+function PricingCard({ title, duration, price, description, features, highlighted = false, delay = 0, onSelectPlan }) {
   return (
     <AnimatedSection delay={delay} className="flex h-full">
       <div className={`relative flex flex-col w-full rounded-2xl p-8 border-2 transition-all duration-300 ${
