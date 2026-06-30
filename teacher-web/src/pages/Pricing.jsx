@@ -128,6 +128,17 @@ export default function Pricing() {
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Check if there's an intended plan after login
+    const intendedPlan = localStorage.getItem('intended_plan');
+    const token = localStorage.getItem('livequizz_token');
+    if (intendedPlan && token) {
+      localStorage.removeItem('intended_plan');
+      setTimeout(() => {
+        handlePayment(intendedPlan);
+      }, 500);
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -135,6 +146,7 @@ export default function Pricing() {
     const token = localStorage.getItem('livequizz_token');
     const user = JSON.parse(localStorage.getItem('livequizz_user') || '{}');
     if (!token) {
+      localStorage.setItem('intended_plan', planKey);
       navigate('/signup');
       return;
     }

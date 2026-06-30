@@ -45,7 +45,12 @@ export default function Signup() {
       if (data.success && data.token) {
         localStorage.setItem('livequizz_token', data.token);
         localStorage.setItem('livequizz_user', JSON.stringify(data.user));
-        navigate('/dashboard');
+        
+        if (localStorage.getItem('intended_plan')) {
+          navigate('/pricing');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(data.error || 'Could not create account. Please try again.');
       }
