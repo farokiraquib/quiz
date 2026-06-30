@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Hexagon, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+import { SERVER_URL } from '../socket';
 
 export default function Login() {
   const navigate = useNavigate();

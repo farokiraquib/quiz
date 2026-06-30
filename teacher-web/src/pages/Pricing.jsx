@@ -118,7 +118,7 @@ function PricingCard({ title, duration, price, description, features, highlighte
   );
 }
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
+import { SERVER_URL } from '../socket';
 
 export default function Pricing() {
   const [scrollY, setScrollY] = useState(0);
