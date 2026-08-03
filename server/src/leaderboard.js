@@ -5,7 +5,7 @@ const { getAllPlayers } = require('./gameState');
 
 /**
  * Calculates score for a single answer submission.
- * Based 50% on accuracy and 50% on speed. Max score 1000.
+ * Based 50% on accuracy and 50% on speed. Max score 100.
  *
  * @param {number} accuracy - A float between 0 and 1 representing answer correctness
  * @param {number} timeTakenMs - Time taken to answer in milliseconds
@@ -19,8 +19,8 @@ function calculateScore(accuracy, timeTakenMs, maxTimeMs) {
   const clampedTime = Math.max(0, Math.min(timeTakenMs, maxTimeMs));
   const timeBonus = 1 - (clampedTime / maxTimeMs);
   
-  // 500 max for accuracy, 500 max for speed (scaled by accuracy)
-  const score = (500 * accuracy) + (500 * accuracy * timeBonus);
+  // 50 max for accuracy, 50 max for speed (scaled by accuracy)
+  const score = (50 * accuracy) + (50 * accuracy * timeBonus);
   return Math.round(score);
 }
 
