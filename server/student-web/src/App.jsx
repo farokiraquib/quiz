@@ -74,9 +74,10 @@ export default function App() {
       setDeferredPrompt(e);
       
       const hideForever = localStorage.getItem('livequizz_hide_install_prompt');
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
-      // Show prompt if not already installed/standalone and hasn't chosen "Don't show again"
-      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true') {
+      // Show prompt if not already installed/standalone, hasn't chosen "Don't show again", and IS on a mobile device
+      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true' && isMobile) {
         setShowInstallPrompt(true);
       }
     };
