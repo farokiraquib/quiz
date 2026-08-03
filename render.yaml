@@ -7,9 +7,8 @@ services:
     runtime: node
     region: singapore  # Low latency for South Asian classrooms
     plan: free
-    rootDir: server
-    buildCommand: npm install && cd ../student-web && npm install && npm run build && cd ../server && npx prisma db push
-    startCommand: node src/index.js
+    buildCommand: cd server && npm install && cd ../student-web && npm install && npm run build && cd ../server && npx prisma db push
+    startCommand: cd server && node src/index.js
     envVars:
       - key: NODE_ENV
         value: production
