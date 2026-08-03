@@ -154,12 +154,42 @@ async function addPlayer(code, socketId, name) {
   const exists = await redis.exists(`room:${code}`);
   if (!exists) return null;
 
-  const player = { id: socketId, name, socketId };
+  // Check if player with same name already exists
+  const playersMap = await getAllPlayers(code);
+  let existingSocketId = null;
+  let oldScore = 0;
+  let hasAnswered = false;
 
-  // Use pipeline for atomic multi-command
+  for (const [sId, p] of playersMap.entries()) {
+    if (p.name.toLowerCase() === name.toLowerCase()) {
+      existingSocketId = sId;
+      break;
+    }
+  }
+
   const pipeline = redis.multi();
+
+  if (existingSocketId) {
+    // Transfer data from old socket to new socket
+    const rawOldScore = await redis.zScore(`room:${code}:scores`, existingSocketId);
+    oldScore = rawOldScore ? parseFloat(rawOldScore) : 0;
+    hasAnswered = await redis.sIsMember(`room:${code}:answered`, existingSocketId);
+
+    pipeline.hDel(`room:${code}:players`, existingSocketId);
+    pipeline.zRem(`room:${code}:scores`, existingSocketId);
+    if (hasAnswered) {
+      pipeline.sRem(`room:${code}:answered`, existingSocketId);
+    }
+  }
+
+  const player = { id: socketId, name, socketId, connected: true };
+
   pipeline.hSet(`room:${code}:players`, socketId, JSON.stringify(player));
-  pipeline.zAdd(`room:${code}:scores`, { score: 0, value: socketId });
+  pipeline.zAdd(`room:${code}:scores`, { score: oldScore, value: socketId });
+  if (hasAnswered) {
+    pipeline.sAdd(`room:${code}:answered`, socketId);
+  }
+  
   await pipeline.exec();
 
   // Ensure TTL is set on the new keys
@@ -230,12 +260,10 @@ async function removePlayerFromRoom(code, socketId) {
   if (!raw) return null;
 
   const player = JSON.parse(raw);
+  player.connected = false;
 
-  const pipeline = redis.multi();
-  pipeline.hDel(`room:${code}:players`, socketId);
-  pipeline.zRem(`room:${code}:scores`, socketId);
-  pipeline.sRem(`room:${code}:answered`, socketId);
-  await pipeline.exec();
+  await redis.hSet(`room:${code}:players`, socketId, JSON.stringify(player));
+  // DO NOT remove from scores or answered to allow rejoining
 
   return { playerName: player.name };
 }

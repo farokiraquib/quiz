@@ -3,7 +3,7 @@ import React from 'react';
 export default function ResultScreen({ questionResult, selectedAnswer, socketId, question }) {
   if (!questionResult) return null;
 
-  const { correctIndices, correctIndex, leaderboard } = questionResult;
+  const { correctIndices, correctIndex, leaderboard, showLeaderboard } = questionResult;
   const actualCorrect = correctIndices || (correctIndex !== undefined ? [correctIndex] : []);
   
   const didAnswer = selectedAnswer && selectedAnswer.length > 0;
@@ -68,19 +68,21 @@ export default function ResultScreen({ questionResult, selectedAnswer, socketId,
         </div>
       </div>
 
-      <div className="leaderboard-container animate-fade-in-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
-        <p className="input-label" style={{ marginBottom: 12 }}>Top 5 Standings</p>
-        {leaderboard?.slice(0, 5).map((player, idx) => {
-          const isMe = player.socketId === socketId;
-          return (
-            <div key={idx} className={`leaderboard-row ${isMe ? 'highlight' : ''}`}>
-              <div className="leaderboard-rank">#{idx + 1}</div>
-              <div className="leaderboard-name">{player.playerName} {isMe && '(You)'}</div>
-              <div className="leaderboard-score">{player.score}</div>
-            </div>
-          );
-        })}
-      </div>
+      {showLeaderboard && (
+        <div className="leaderboard-container animate-fade-in-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
+          <p className="input-label" style={{ marginBottom: 12 }}>Top 5 Standings</p>
+          {leaderboard?.slice(0, 5).map((player, idx) => {
+            const isMe = player.socketId === socketId;
+            return (
+              <div key={idx} className={`leaderboard-row ${isMe ? 'highlight' : ''}`}>
+                <div className="leaderboard-rank">#{idx + 1}</div>
+                <div className="leaderboard-name">{player.playerName} {isMe && '(You)'}</div>
+                <div className="leaderboard-score">{player.score}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <p className="text-muted animate-fade-in-up" style={{ marginTop: 32, fontWeight: 600, animationDelay: '0.5s', animationFillMode: 'both' }}>Awaiting next question...</p>
     </div>

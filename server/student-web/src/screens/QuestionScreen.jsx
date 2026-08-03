@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const COLORS = ['var(--option-a)', 'var(--option-b)', 'var(--option-c)', 'var(--option-d)'];
 const SHAPES = ['▲', '◆', '●', '■'];
@@ -121,7 +122,22 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
               onClick={() => handleOptionClick(i)}
             >
               <span className="option-shape">{SHAPES[i % SHAPES.length]}</span>
-              {optionImg && <img src={optionImg} alt={`Option ${i+1}`} style={{ maxWidth: '100%', maxHeight: 80, objectFit: 'contain', marginBottom: 8, borderRadius: 8 }} />}
+              {optionImg && (
+                <div 
+                  onClick={(e) => { e.stopPropagation(); setZoomedImage(optionImg); }}
+                  style={{ position: 'relative', display: 'inline-block', cursor: 'zoom-in', marginBottom: 8, maxWidth: '100%' }}
+                >
+                  <img src={optionImg} alt={`Option ${i+1}`} style={{ maxWidth: '100%', maxHeight: 80, objectFit: 'contain', borderRadius: 8, display: 'block' }} />
+                  <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.7)', padding: '4px', borderRadius: '4px', display: 'flex' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      <line x1="11" y1="8" x2="11" y2="14"></line>
+                      <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                  </div>
+                </div>
+              )}
               <span>{optionText}</span>
             </div>
           );
@@ -130,12 +146,32 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
 
       {zoomedImage && (
         <div 
-          style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, cursor: 'zoom-out' }}
-          onClick={() => setZoomedImage(null)}
+          style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <img src={zoomedImage} alt="Zoomed" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          <TransformWrapper
+            initialScale={1}
+            minScale={1}
+            maxScale={8}
+            centerOnInit
+            wheel={{ step: 0.1 }}
+            pinch={{ step: 5 }}
+            doubleClick={{ disabled: false, step: 2 }}
+          >
+            {({ zoomIn, zoomOut, resetTransform }) => (
+              <React.Fragment>
+                <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 1000000, display: 'flex', gap: 12 }}>
+                  <button onClick={() => zoomIn()} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                  <button onClick={() => zoomOut()} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>-</button>
+                  <button onClick={() => resetTransform()} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>Reset</button>
+                </div>
+                <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
+                  <img src={zoomedImage} alt="Zoomed" style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }} />
+                </TransformComponent>
+              </React.Fragment>
+            )}
+          </TransformWrapper>
           <button 
-            style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 'bold' }}
+            style={{ position: 'absolute', top: 20, right: 20, zIndex: 1000000, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 'bold' }}
             onClick={(e) => { e.stopPropagation(); setZoomedImage(null); }}
           >
             ✕ Close

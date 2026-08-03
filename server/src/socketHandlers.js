@@ -355,6 +355,7 @@ function registerHandlers(io) {
         io.to(data.roomCode).emit('question:result', {
           correctIndices: currentQuestion.correctIndices || [currentQuestion.correctIndex],
           leaderboard,
+          showLeaderboard: data.showLeaderboard === true,
         });
 
         if (room.currentQuestionIndex >= questions.length - 1) {

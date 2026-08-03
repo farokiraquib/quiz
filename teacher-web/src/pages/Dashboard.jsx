@@ -68,6 +68,7 @@ export default function Dashboard() {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [showStudentLeaderboard, setShowStudentLeaderboard] = useState(false);
 
   // ── Socket Event Handlers ──
 
@@ -186,8 +187,9 @@ export default function Dashboard() {
     socket.emit('host:end-question', {
       roomCode,
       questionIndex,
+      showLeaderboard: showStudentLeaderboard,
     });
-  }, [roomCode, questionIndex]);
+  }, [roomCode, questionIndex, showStudentLeaderboard]);
 
   const handleNextQuestion = useCallback(() => {
     const nextIndex = questionIndex + 1;
@@ -427,6 +429,8 @@ export default function Dashboard() {
             totalPlayers={players.length}
             timeLimit={currentQuestion?.timeLimit || 20}
             onEndQuestion={handleEndQuestion}
+            showStudentLeaderboard={showStudentLeaderboard}
+            setShowStudentLeaderboard={setShowStudentLeaderboard}
           />
         )}
 

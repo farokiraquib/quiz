@@ -19,6 +19,8 @@ export default function GameControl({
   totalPlayers,
   timeLimit,
   onEndQuestion,
+  showStudentLeaderboard,
+  setShowStudentLeaderboard,
 }) {
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [isTimerDone, setIsTimerDone] = useState(false);
@@ -109,7 +111,16 @@ export default function GameControl({
   return (
     <div className="screen-enter min-h-screen flex flex-col items-center p-4 md:p-8 relative bg-black">
       <div className="max-w-4xl w-full relative">
-        <div className="absolute top-0 right-0 z-10">
+        <div className="absolute top-0 right-0 z-10 flex gap-4 items-center">
+          <label className="flex items-center gap-2 cursor-pointer text-xs md:text-sm text-white/70 hover:text-white transition-colors">
+            <input 
+              type="checkbox" 
+              checked={showStudentLeaderboard}
+              onChange={(e) => setShowStudentLeaderboard(e.target.checked)}
+              className="accent-yellow-400 cursor-pointer w-4 h-4"
+            />
+            Show Leaderboard to Students
+          </label>
           <button 
             onClick={() => setIsEditing(true)}
             className="btn-outline text-xs md:text-sm py-2 px-4"
