@@ -89,9 +89,8 @@ const path = require('path');
 
 // Student PWA at /play
 const studentDistPath = path.join(__dirname, '../../student-web/dist');
-app.use('/play', express.static(studentDistPath));
-app.get('/play', (req, res) => res.redirect(301, '/play/'));
-app.get('/play/*', (req, res) => {
+app.use('/play', express.static(studentDistPath, { redirect: false }));
+app.get(['/play', '/play/*'], (req, res) => {
   res.sendFile(path.join(studentDistPath, 'index.html'));
 });
 
