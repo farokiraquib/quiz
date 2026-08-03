@@ -63,6 +63,38 @@ export default function App() {
     };
   }, []);
 
+  // PWA Install Prompt Logic
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      // Show prompt if not already installed/standalone
+      if (!window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallPrompt(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      setShowInstallPrompt(false);
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`Install prompt outcome: ${outcome}`);
+      setDeferredPrompt(null);
+    }
+  };
+
+  const handleDismissInstall = () => {
+    setShowInstallPrompt(false);
+  };
+
   const resetToJoin = () => {
     socket.disconnect();
     setPlayerName('');
@@ -111,6 +143,20 @@ export default function App() {
           playerName={playerName}
           onPlayAgain={resetToJoin}
         />
+      )}
+
+      {/* PWA Install Banner */}
+      {showInstallPrompt && (
+        <div className="fixed bottom-4 left-4 right-4 bg-[#1b3a2a] border-2 border-[#fcd34d] p-4 rounded-xl shadow-2xl z-50 flex items-center justify-between text-white animate-slide-up">
+          <div className="flex flex-col">
+            <span className="font-bold text-sm">Install LiveQuizz</span>
+            <span className="text-xs text-white/70">Add to home screen for faster access</span>
+          </div>
+          <div className="flex gap-3 items-center">
+            <button onClick={handleDismissInstall} className="text-xs font-semibold text-white/50 hover:text-white transition-colors">Later</button>
+            <button onClick={handleInstallClick} className="bg-[#fcd34d] text-[#163022] font-bold text-xs px-4 py-2 rounded-lg hover:bg-yellow-300 transition-colors">Install</button>
+          </div>
+        </div>
       )}
     </div>
   );
