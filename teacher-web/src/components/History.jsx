@@ -52,7 +52,7 @@ export default function History({ onBack }) {
       room.leaderboard.forEach((player, index) => {
         const rowData = [
           index + 1,
-          player.playerName,
+          player.name,
           player.score
         ];
         tableRows.push(rowData);
