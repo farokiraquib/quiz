@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const COLORS = ['rgba(6,182,212,0.8)', 'rgba(139,92,246,0.8)', 'rgba(16,185,129,0.8)', 'rgba(245,158,11,0.8)'];
+const COLORS = ['var(--option-a)', 'var(--option-b)', 'var(--option-c)', 'var(--option-d)'];
 const SHAPES = ['▲', '◆', '●', '■'];
 
 export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, socket }) {
@@ -60,7 +60,7 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
   const timerWidth = `${(timeLeft / timeLimit) * 100}%`;
 
   return (
-    <div className="screen" style={{ justifyContent: 'flex-start' }}>
+    <div className="screen bg-black" style={{ justifyContent: 'flex-start' }}>
       <div className="question-timer-track">
         <div className="question-timer-bar" style={{ width: timerWidth, backgroundColor: timerColor }}></div>
       </div>
@@ -70,10 +70,10 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
         <span className="question-number-badge">Q{questionIndex + 1}</span>
       </div>
 
-      <div className="question-card" style={{ animation: 'fadeInScale 0.5s ease forwards' }}>
+      <div className="question-card animate-slide-down">
         {imageUrl && <img src={imageUrl} alt="Question" className="question-image" />}
         <h2 className="question-text">{text}</h2>
-        {type === 'multiple' && <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>Select all that apply</p>}
+        {type === 'multiple' && <p className="text-muted" style={{ fontSize: 14, marginTop: 8 }}>Select all that apply</p>}
       </div>
 
       {hasAnswered ? (
@@ -96,12 +96,11 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
           return (
             <div
               key={i}
-              className={`option-btn ${isSelected ? 'option-selected' : ''} ${isDimmed ? 'option-dimmed' : ''}`}
+              className={`option-btn animate-fade-in-up ${isSelected ? 'option-selected' : ''} ${isDimmed ? 'option-dimmed' : ''}`}
               style={{
                 backgroundColor: COLORS[i % COLORS.length],
-                animation: `staggerIn 0.5s ease forwards`,
                 animationDelay: `${0.15 + i * 0.08}s`,
-                opacity: 0
+                animationFillMode: 'both'
               }}
               onClick={() => handleOptionClick(i)}
             >

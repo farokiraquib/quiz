@@ -40,25 +40,24 @@ export default function ResultScreen({ questionResult, selectedAnswer, socketId,
   }).join(' & ');
 
   return (
-    <div className="screen">
-      <div className={`result-orb ${isCorrect ? 'result-correct' : 'result-wrong'}`}></div>
+    <div className="screen bg-black">
 
-      <div className="result-icon-circle" style={{ animation: isCorrect ? 'wiggle 0.5s ease 2' : 'popIn 0.5s ease' }}>
+      <div className="result-icon-circle animate-fade-in-up">
         {getEmoji()}
       </div>
 
-      <h1 className="title-large" style={{ color: isCorrect ? 'var(--green)' : didAnswer ? 'var(--red)' : 'var(--yellow)', textShadow: 'none', marginBottom: 24 }}>
+      <h1 className="title-large animate-fade-in-up" style={{ color: isCorrect ? 'var(--green)' : didAnswer ? 'var(--red)' : 'var(--yellow)', textShadow: 'none', marginBottom: 24, animationDelay: '0.1s', animationFillMode: 'both' }}>
         {getTitle()}
       </h1>
 
       {!isCorrect && (
-        <div className="card" style={{ padding: 16, marginBottom: 24, background: 'rgba(0,0,0,0.6)' }}>
+        <div className="card animate-fade-in-up" style={{ padding: 16, marginBottom: 24, animationDelay: '0.2s', animationFillMode: 'both' }}>
           <p className="input-label" style={{ marginBottom: 4, color: 'var(--green)' }}>Correct Answer</p>
           <p style={{ fontWeight: 700, fontSize: 18 }}>{correctOptionTexts}</p>
         </div>
       )}
 
-      <div className="result-stats-row">
+      <div className="result-stats-row animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
         <div className="result-stat-card">
           <div className="result-stat-label">RANK</div>
           <div className="result-stat-value">#{playerRank}</div>
@@ -69,7 +68,7 @@ export default function ResultScreen({ questionResult, selectedAnswer, socketId,
         </div>
       </div>
 
-      <div className="leaderboard-container">
+      <div className="leaderboard-container animate-fade-in-up" style={{ animationDelay: '0.4s', animationFillMode: 'both' }}>
         <p className="input-label" style={{ marginBottom: 12 }}>Top 5 Standings</p>
         {leaderboard?.slice(0, 5).map((player, idx) => {
           const isMe = player.socketId === socketId;
@@ -83,7 +82,7 @@ export default function ResultScreen({ questionResult, selectedAnswer, socketId,
         })}
       </div>
 
-      <p style={{ color: 'var(--text-dim)', marginTop: 32, fontWeight: 600, animation: 'pulse 2s infinite' }}>Next question coming soon...</p>
+      <p className="text-muted animate-fade-in-up" style={{ marginTop: 32, fontWeight: 600, animationDelay: '0.5s', animationFillMode: 'both' }}>Awaiting next question...</p>
     </div>
   );
 }

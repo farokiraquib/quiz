@@ -15,10 +15,9 @@ export default function GameOverScreen({ finalLeaderboard, socketId, playerName,
   const myPodium = podium[playerRank];
 
   return (
-    <div className="screen" style={{ paddingBottom: 40 }}>
-      <div className="bg-orb gameover-orb"></div>
+    <div className="screen bg-black" style={{ paddingBottom: 40 }}>
 
-      <div style={{ animation: 'popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+      <div className="animate-fade-in-up">
         {isTopThree ? (
           <div className="podium-circle" style={{ borderColor: myPodium.border }}>
             {myPodium.emoji}
@@ -30,24 +29,24 @@ export default function GameOverScreen({ finalLeaderboard, socketId, playerName,
         )}
       </div>
 
-      <h1 className="title-large" style={{ color: isTopThree ? 'var(--gold)' : 'white', marginBottom: 8, animation: 'fadeInUp 0.5s ease forwards' }}>
-        {isTopThree ? 'Amazing!' : 'Game Over!'}
+      <h1 className="title-large animate-fade-in-up" style={{ color: isTopThree ? 'var(--gold)' : 'white', marginBottom: 8, animationDelay: '0.1s', animationFillMode: 'both' }}>
+        {isTopThree ? 'Excellent Work!' : 'Quiz Complete'}
       </h1>
       
-      <p className="subtitle" style={{ color: 'var(--text-muted)', marginBottom: 32 }}>
-        {playerRank === 1 ? 'You are the champion! 🏆' : 
-         playerRank <= 3 ? 'You made the podium! 🌟' : 
+      <p className="subtitle animate-fade-in-up" style={{ color: 'var(--text-muted)', marginBottom: 32, animationDelay: '0.2s', animationFillMode: 'both' }}>
+        {playerRank === 1 ? 'Outstanding performance! 🌟' : 
+         playerRank <= 3 ? 'Great job, you are in the top 3! 🌟' : 
          'Great effort! Keep practicing! 💪'}
       </p>
 
-      <div className="final-score-card" style={{ animation: 'slideUp 0.6s ease forwards' }}>
+      <div className="final-score-card animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
         <p className="input-label">FINAL RANK</p>
         <div className="final-rank-val">#{playerRank}</div>
         <div className="final-score-val">{playerScore} pts</div>
       </div>
 
-      <div className="leaderboard-container" style={{ flex: 1, maxHeight: 300, overflowY: 'auto', marginBottom: 24, animation: 'fadeIn 0.8s ease forwards' }}>
-        <p className="input-label" style={{ position: 'sticky', top: -16, background: 'var(--bg)', padding: '16px 0 8px 0', zIndex: 1 }}>Final Standings</p>
+      <div className="leaderboard-container animate-fade-in-up" style={{ flex: 1, maxHeight: 300, overflowY: 'auto', marginBottom: 24, animationDelay: '0.4s', animationFillMode: 'both' }}>
+        <p className="input-label" style={{ position: 'sticky', top: -16, background: 'var(--bg-surface)', padding: '16px 0 8px 0', zIndex: 1 }}>Final Standings</p>
         {finalLeaderboard?.slice(0, 5).map((player, idx) => {
           const isMe = player.socketId === socketId;
           const rank = idx + 1;
@@ -63,9 +62,9 @@ export default function GameOverScreen({ finalLeaderboard, socketId, playerName,
         })}
       </div>
 
-      <div style={{ width: '100%', maxWidth: 400, animation: 'fadeIn 1s ease forwards' }}>
+      <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: 400, animationDelay: '0.5s', animationFillMode: 'both' }}>
         <button className="btn-primary" onClick={onPlayAgain}>
-          Play Again
+          Done
         </button>
       </div>
     </div>
