@@ -3,7 +3,9 @@ import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
-export default function History() {
+import { SERVER_URL } from '../socket';
+
+export default function History({ onBack }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,8 +16,8 @@ export default function History() {
 
   const fetchHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/history', {
+      const token = localStorage.getItem('livequizz_token');
+      const res = await axios.get(`${SERVER_URL}/api/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.success) {
@@ -87,6 +89,12 @@ export default function History() {
   return (
     <div className="max-w-4xl mx-auto pb-12">
       <div className="mb-8">
+        <button 
+          onClick={onBack}
+          className="mb-4 text-white/50 hover:text-white/80 transition-colors flex items-center gap-2 text-sm font-bold sm:hidden"
+        >
+          ← Back to Dashboard
+        </button>
         <h1 className="text-3xl font-bold text-white mb-2">Room History</h1>
         <p className="text-gray-400">View your past quiz sessions and download reports.</p>
       </div>

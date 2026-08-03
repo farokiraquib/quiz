@@ -401,7 +401,7 @@ export default function Dashboard() {
 
         {screen === 'history' && (
           <div className="pt-8 px-4">
-            <History />
+            <History onBack={() => setScreen('create')} />
           </div>
         )}
 
