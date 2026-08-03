@@ -164,8 +164,8 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
                   <button onClick={() => zoomOut()} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>-</button>
                   <button onClick={() => resetTransform()} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>Reset</button>
                 </div>
-                <TransformComponent wrapperStyle={{ width: '100%', height: '100%' }}>
-                  <img src={zoomedImage} alt="Zoomed" style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }} />
+                <TransformComponent wrapperStyle={{ width: '100vw', height: '100vh' }}>
+                  <img src={zoomedImage} alt="Zoomed" style={{ width: '100vw', height: '100vh', objectFit: 'contain', pointerEvents: 'auto' }} />
                 </TransformComponent>
               </React.Fragment>
             )}
