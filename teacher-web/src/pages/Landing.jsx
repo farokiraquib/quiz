@@ -195,9 +195,19 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-8 text-sm text-white/70 font-semibold">Free forever for teachers • No training required</p>
-            <div className="mt-6">
-              <a href="/play" className="text-white/60 hover:text-white underline underline-offset-4 text-sm font-semibold transition-colors">
-                Are you a student? Click here to join a quiz
+            <div className="mt-12 flex justify-center">
+              <a
+                href="/play"
+                className="inline-flex items-center gap-4 px-6 py-3 rounded-full bg-white/5 border border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300 group shadow-lg"
+              >
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <User className="w-5 h-5 text-white/90" />
+                </div>
+                <div className="text-left">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-0.5">Student Access</div>
+                  <div className="text-sm font-bold text-white group-hover:text-yellow-200 transition-colors">Join a Quiz Session</div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-yellow-200 group-hover:translate-x-1 transition-all ml-2" />
               </a>
             </div>
           </AnimatedSection>
