@@ -9,6 +9,7 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedIndices, setSelectedIndices] = useState([]);
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
     setHasAnswered(false);
@@ -71,7 +72,22 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
       </div>
 
       <div className="question-card animate-slide-down">
-        {imageUrl && <img src={imageUrl} alt="Question" className="question-image" />}
+        {imageUrl && (
+          <div 
+            onClick={() => setZoomedImage(imageUrl)}
+            style={{ position: 'relative', display: 'inline-block', cursor: 'zoom-in', marginBottom: '16px' }}
+          >
+            <img src={imageUrl} alt="Question" className="question-image" style={{ marginBottom: 0 }} />
+            <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', padding: '6px', borderRadius: '6px', display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </div>
+          </div>
+        )}
         <h2 className="question-text">{text}</h2>
         {type === 'multiple' && <p className="text-muted" style={{ fontSize: 14, marginTop: 8 }}>Select all that apply</p>}
       </div>
@@ -111,6 +127,21 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
           );
         })}
       </div>
+
+      {zoomedImage && (
+        <div 
+          style={{ position: 'fixed', inset: 0, zIndex: 999999, backgroundColor: 'rgba(0,0,0,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, cursor: 'zoom-out' }}
+          onClick={() => setZoomedImage(null)}
+        >
+          <img src={zoomedImage} alt="Zoomed" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          <button 
+            style={{ position: 'absolute', top: 24, right: 24, background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 'bold' }}
+            onClick={(e) => { e.stopPropagation(); setZoomedImage(null); }}
+          >
+            ✕ Close
+          </button>
+        </div>
+      )}
     </div>
   );
 }
