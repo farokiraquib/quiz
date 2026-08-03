@@ -88,7 +88,7 @@ app.use('/api/admin', adminRoutes);
 const path = require('path');
 
 // Student PWA at /play
-const studentDistPath = path.join(__dirname, '../../student-web/dist');
+const studentDistPath = path.join(__dirname, '../student-web/dist');
 app.use('/play', express.static(studentDistPath, { redirect: false }));
 app.get(['/play', '/play/*'], (req, res) => {
   res.sendFile(path.join(studentDistPath, 'index.html'));
