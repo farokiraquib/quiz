@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../prisma');
-const { authenticateTeacher } = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 
 // Get history of rooms created by the teacher
-router.get('/', authenticateTeacher, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const history = await prisma.roomHistory.findMany({
       where: {
