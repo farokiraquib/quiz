@@ -66,13 +66,17 @@ export default function App() {
   // PWA Install Prompt Logic
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      // Show prompt if not already installed/standalone
-      if (!window.matchMedia('(display-mode: standalone)').matches) {
+      
+      const hideForever = localStorage.getItem('livequizz_hide_install_prompt');
+      
+      // Show prompt if not already installed/standalone and hasn't chosen "Don't show again"
+      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true') {
         setShowInstallPrompt(true);
       }
     };
@@ -92,6 +96,9 @@ export default function App() {
   };
 
   const handleDismissInstall = () => {
+    if (dontAskAgain) {
+      localStorage.setItem('livequizz_hide_install_prompt', 'true');
+    }
     setShowInstallPrompt(false);
   };
 
@@ -147,14 +154,27 @@ export default function App() {
 
       {/* PWA Install Banner */}
       {showInstallPrompt && (
-        <div className="fixed bottom-4 left-4 right-4 bg-[#1b3a2a] border-2 border-[#fcd34d] p-4 rounded-xl shadow-2xl z-50 flex items-center justify-between text-white animate-slide-up">
-          <div className="flex flex-col">
-            <span className="font-bold text-sm">Install LiveQuizz</span>
-            <span className="text-xs text-white/70">Add to home screen for faster access</span>
+        <div className="fixed bottom-4 left-4 right-4 bg-[#1b3a2a] border-2 border-[#fcd34d] p-4 rounded-xl shadow-2xl z-50 flex flex-col gap-3 text-white animate-slide-up">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">Install LiveQuizz</span>
+              <span className="text-xs text-white/70">Add to home screen for faster access</span>
+            </div>
+            <div className="flex gap-3 items-center">
+              <button onClick={handleDismissInstall} className="text-xs font-semibold text-white/50 hover:text-white transition-colors">Later</button>
+              <button onClick={handleInstallClick} className="bg-[#fcd34d] text-[#163022] font-bold text-xs px-4 py-2 rounded-lg hover:bg-yellow-300 transition-colors">Install</button>
+            </div>
           </div>
-          <div className="flex gap-3 items-center">
-            <button onClick={handleDismissInstall} className="text-xs font-semibold text-white/50 hover:text-white transition-colors">Later</button>
-            <button onClick={handleInstallClick} className="bg-[#fcd34d] text-[#163022] font-bold text-xs px-4 py-2 rounded-lg hover:bg-yellow-300 transition-colors">Install</button>
+          <div className="border-t border-white/10 pt-2">
+            <label className="flex items-center gap-2 text-xs text-white/50 cursor-pointer hover:text-white/80 transition-colors">
+              <input 
+                type="checkbox" 
+                checked={dontAskAgain}
+                onChange={(e) => setDontAskAgain(e.target.checked)}
+                className="accent-[#fcd34d] w-3 h-3 cursor-pointer"
+              />
+              Don't show this again
+            </label>
           </div>
         </div>
       )}
