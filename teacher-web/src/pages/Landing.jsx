@@ -14,7 +14,8 @@ import {
   Activity,
   Heart,
   Shield,
-  Home
+  Home,
+  User
 } from 'lucide-react';
 
 /* ── Scroll-triggered fade-in hook ── */

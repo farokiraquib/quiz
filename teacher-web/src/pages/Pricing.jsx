@@ -222,7 +222,7 @@ function CheckoutModal({ planKey, onClose, onProceed }) {
           onClick={() => onProceed(appliedPromo)}
           className="w-full bg-yellow-400 text-[#163022] font-bold py-3.5 rounded-xl hover:bg-yellow-300 shadow-[0_4px_0_#d97706] active:translate-y-1 active:shadow-none transition-all"
         >
-          {finalPrice === 0 && discount === 100 ? 'Pay ₹1 to Verify & Claim' : `Pay ₹${finalPrice}`}
+          {finalPrice === 0 && discount === 100 ? 'Claim for Free' : `Pay ₹${finalPrice}`}
         </button>
       </div>
     </div>
@@ -305,6 +305,19 @@ export default function Pricing() {
 
       if (data.message === 'Switched to Starter plan') {
         alert('You are now on the Starter Plan.');
+        navigate('/dashboard');
+        return;
+      }
+
+      if (data.bypassed) {
+        alert(data.message || 'Plan activated successfully!');
+        
+        // Update user plan in local storage
+        if (user) {
+          user.plan = data.plan;
+          localStorage.setItem('livequizz_user', JSON.stringify(user));
+        }
+        
         navigate('/dashboard');
         return;
       }

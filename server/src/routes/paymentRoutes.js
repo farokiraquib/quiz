@@ -80,9 +80,29 @@ router.post('/create-order', async (req, res) => {
       return res.json({ success: true, plan: updated.plan, message: 'Switched to Starter plan' });
     }
 
-    // Minimum 1 INR for Razorpay if 100% discount was applied to a paid plan
+    // Bypass Razorpay if 100% discount was applied to a paid plan
     if (amount === 0 && promoCode) {
-      amount = 100; // 1 INR in paise
+      // Calculate expiration date (e.g. 6 months for SEMESTER, 12 for PRO/INSTITUTE)
+      let planExpiresAt = new Date();
+      if (plan === 'SEMESTER_PASS') {
+        planExpiresAt.setMonth(planExpiresAt.getMonth() + 6);
+      } else {
+        planExpiresAt.setFullYear(planExpiresAt.getFullYear() + 1);
+      }
+
+      const updated = await prisma.teacher.update({
+        where: { id: req.teacher.id },
+        data: { plan, planExpiresAt, razorpayOrderId: null, razorpayPaymentId: null }
+      });
+
+      // Increment promo usage
+      const uppercaseCode = promoCode.toUpperCase().trim();
+      await prisma.promoCode.update({
+        where: { code: uppercaseCode },
+        data: { timesUsed: { increment: 1 } }
+      });
+
+      return res.json({ success: true, bypassed: true, plan: updated.plan, message: 'Plan activated successfully with 100% discount!' });
     }
 
     const options = {
