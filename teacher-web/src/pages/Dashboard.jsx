@@ -32,9 +32,17 @@ export default function Dashboard() {
       fetch(`${SERVER_URL}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem('livequizz_token');
+          localStorage.removeItem('livequizz_user');
+          navigate('/login', { replace: true });
+          throw new Error('Token expired');
+        }
+        return res.json();
+      })
       .then(data => {
-        if (data.success) setFullProfile(data.user);
+        if (data && data.success) setFullProfile(data.user);
       })
       .catch(err => console.error('Failed to fetch profile', err));
     }
