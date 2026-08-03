@@ -86,6 +86,15 @@ app.use('/api/admin', adminRoutes);
 
 // ─── Serve Frontend ──────────────────────────────────────────────────
 const path = require('path');
+
+// Student PWA at /play
+const studentDistPath = path.join(__dirname, '../../student-web/dist');
+app.use('/play', express.static(studentDistPath));
+app.get('/play/*', (req, res) => {
+  res.sendFile(path.join(studentDistPath, 'index.html'));
+});
+
+// Teacher dashboard at /
 const clientDistPath = path.join(__dirname, '../../teacher-web/dist');
 app.use(express.static(clientDistPath));
 
