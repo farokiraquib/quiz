@@ -78,11 +78,13 @@ app.post('/upload', upload.single('image'), (req, res) => {
 
 // ─── API Routes ──────────────────────────────────────────────────────
 const adminRoutes = require('./routes/adminRoutes');
+const historyRoutes = require('./routes/historyRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/history', historyRoutes);
 
 // ─── Serve Frontend ──────────────────────────────────────────────────
 const path = require('path');

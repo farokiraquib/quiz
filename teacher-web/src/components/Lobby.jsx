@@ -12,7 +12,7 @@ export default function Lobby({ roomCode, players, onStart, onEndGame }) {
   }, [roomCode]);
 
   const shareLink = useCallback(() => {
-    const url = `${window.location.origin}/?room=${roomCode}`;
+    const url = `${window.location.origin}/play?code=${roomCode}`;
     if (navigator.share) {
       navigator.share({
         title: 'Join my LiveQuizz!',

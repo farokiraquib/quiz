@@ -15,6 +15,12 @@ export default function JoinScreen({ onJoined }) {
         setActiveRooms(response.rooms || []);
       }
     });
+
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get('code');
+    if (urlCode) {
+      setCode(urlCode.toUpperCase());
+    }
   }, []);
 
   const handleJoin = (e) => {

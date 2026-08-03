@@ -31,6 +31,7 @@ model Teacher {
   lastRoomCreatedAt DateTime?
 
   quizzes Quiz[]
+  roomHistories RoomHistory[]
 }
 
 model Quiz {
@@ -69,4 +70,17 @@ model PromoCode {
   timesUsed          Int      @default(0)
   active             Boolean  @default(true)
   createdAt          DateTime @default(now())
+}
+
+model RoomHistory {
+  id               String   @id @default(uuid())
+  teacherId        String
+  roomCode         String
+  totalPlayers     Int      @default(0)
+  leaderboard      Json
+  createdAt        DateTime @default(now())
+
+  teacher          Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId])
 }

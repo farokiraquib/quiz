@@ -6,7 +6,8 @@ import CreateQuiz from '../components/CreateQuiz';
 import Lobby from '../components/Lobby';
 import GameControl from '../components/GameControl';
 import Leaderboard from '../components/Leaderboard';
-import { Sparkles, LogOut, User } from 'lucide-react';
+import History from '../components/History';
+import { Sparkles, LogOut, User, History as HistoryIcon } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -249,6 +250,23 @@ export default function Dashboard() {
             <span className="text-xl font-black text-white tracking-tight font-serif">LiveQuizz</span>
           </div>
 
+          {(screen === 'create' || screen === 'history') && (
+            <div className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
+              <button 
+                onClick={() => setScreen('create')} 
+                className={`font-bold transition-colors ${screen === 'create' ? 'text-white border-b-2 border-[var(--accent-primary)] pb-1' : 'text-white/50 hover:text-white/80 pb-1'}`}
+              >
+                Create Quiz
+              </button>
+              <button 
+                onClick={() => setScreen('history')} 
+                className={`font-bold transition-colors ${screen === 'history' ? 'text-white border-b-2 border-[var(--accent-primary)] pb-1' : 'text-white/50 hover:text-white/80 pb-1'}`}
+              >
+                History
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center gap-4 relative">
             {user && (
               <div 
@@ -321,6 +339,18 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+
+                  <hr className="border-white/5" />
+                  
+                  <button 
+                    onClick={() => { setScreen('history'); setShowProfileMenu(false); }} 
+                    className="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-3 group"
+                  >
+                    <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] group-hover:bg-[var(--accent-primary)] group-hover:text-white transition-colors">
+                      <HistoryIcon className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold text-white/90 group-hover:text-white transition-colors">View Session History</span>
+                  </button>
                   
                   {/* Institute Notice */}
                   {fullProfile.plan === 'INSTITUTE' && (
@@ -367,6 +397,12 @@ export default function Dashboard() {
       <div>
         {screen === 'create' && (
           <CreateQuiz onRoomCreated={handleRoomCreated} />
+        )}
+
+        {screen === 'history' && (
+          <div className="pt-8 px-4">
+            <History />
+          </div>
         )}
 
         {screen === 'lobby' && (

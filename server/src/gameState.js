@@ -363,7 +363,9 @@ async function getActiveRooms() {
       const status = await redis.hGet(key, 'status');
       const playerCount = await redis.hLen(`room:${code}:players`);
 
-      activeRooms.push({ code, playerCount, status: status || 'lobby' });
+      if (status !== 'finished') {
+        activeRooms.push({ code, playerCount, status: status || 'lobby' });
+      }
     }
   } while (cursor !== '0');
 

@@ -361,6 +361,23 @@ function registerHandlers(io) {
           await setRoomField(data.roomCode, 'status', 'finished');
           io.to(data.roomCode).emit('game:finished', { leaderboard });
           console.log(`[Room ${data.roomCode}] Game finished`);
+          
+          if (!room.historySaved && room.teacherId) {
+            try {
+              const playerCount = await getPlayerCount(data.roomCode);
+              await prisma.roomHistory.create({
+                data: {
+                  teacherId: room.teacherId,
+                  roomCode: data.roomCode,
+                  totalPlayers: playerCount,
+                  leaderboard: leaderboard,
+                }
+              });
+              await setRoomField(data.roomCode, 'historySaved', true);
+            } catch (err) {
+              console.error('Failed to save room history:', err);
+            }
+          }
         }
 
         console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1} ended`);
@@ -411,6 +428,23 @@ function registerHandlers(io) {
           const leaderboard = await buildLeaderboard(data.roomCode);
           io.to(data.roomCode).emit('game:finished', { leaderboard });
           console.log(`[Room ${data.roomCode}] Game finished (no more questions)`);
+
+          if (!room.historySaved && room.teacherId) {
+            try {
+              const playerCount = await getPlayerCount(data.roomCode);
+              await prisma.roomHistory.create({
+                data: {
+                  teacherId: room.teacherId,
+                  roomCode: data.roomCode,
+                  totalPlayers: playerCount,
+                  leaderboard: leaderboard,
+                }
+              });
+              await setRoomField(data.roomCode, 'historySaved', true);
+            } catch (err) {
+              console.error('Failed to save room history:', err);
+            }
+          }
         }
       } catch (err) {
         console.error('[host:next-question] Error:', err);
@@ -427,6 +461,25 @@ function registerHandlers(io) {
         io.to(data.roomCode).emit('room:host-disconnected', {
           message: 'The host has ended the game.',
         });
+        
+        // Also save history if not saved yet
+        if (!room.historySaved && room.teacherId) {
+            try {
+              const leaderboard = await buildLeaderboard(data.roomCode);
+              const playerCount = await getPlayerCount(data.roomCode);
+              await prisma.roomHistory.create({
+                data: {
+                  teacherId: room.teacherId,
+                  roomCode: data.roomCode,
+                  totalPlayers: playerCount,
+                  leaderboard: leaderboard,
+                }
+              });
+            } catch (err) {
+              console.error('Failed to save room history on end-game:', err);
+            }
+        }
+        
         await removeRoom(data.roomCode);
         console.log(`[Room ${data.roomCode}] Game ended by host, room destroyed`);
       } catch (err) {
