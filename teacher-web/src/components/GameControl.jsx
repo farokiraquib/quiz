@@ -111,7 +111,7 @@ export default function GameControl({
   return (
     <div className="screen-enter min-h-screen flex flex-col items-center p-4 md:p-8 relative bg-black">
       <div className="max-w-4xl w-full relative">
-        <div className="absolute top-0 right-0 z-10 flex gap-4 items-center">
+        <div className="absolute top-0 right-0 z-10 flex flex-col items-end md:flex-row gap-2 md:gap-4 md:items-center">
           <label className="flex items-center gap-2 cursor-pointer text-xs md:text-sm text-white/70 hover:text-white transition-colors">
             <input 
               type="checkbox" 
@@ -130,7 +130,7 @@ export default function GameControl({
         </div>
 
         {/* Question Header */}
-        <div className="flex items-center justify-between mb-8 pt-12 md:pt-0 animate-slide-in-down">
+        <div className="flex items-center justify-between mb-8 pt-20 md:pt-0 animate-slide-in-down">
           <div className="bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-3 flex items-center gap-3">
             <span className="text-xl">🎯</span>
             <span className="text-sm font-bold text-white/50 uppercase tracking-wider">Question</span>

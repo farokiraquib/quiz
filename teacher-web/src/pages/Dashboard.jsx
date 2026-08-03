@@ -112,7 +112,12 @@ export default function Dashboard() {
     'room:player-joined',
     useCallback((data) => {
       setPlayers((prev) => {
-        if (prev.some((p) => p.id === data.id)) return prev;
+        const existingIndex = prev.findIndex(p => p.name.toLowerCase() === data.name.toLowerCase());
+        if (existingIndex !== -1) {
+          const newPlayers = [...prev];
+          newPlayers[existingIndex] = data;
+          return newPlayers;
+        }
         return [...prev, data];
       });
     }, []),
