@@ -87,6 +87,8 @@ async function getRoom(code) {
     currentQuestionIndex: parseInt(data.currentQuestionIndex, 10) || 0,
     status: data.status || 'lobby',
     questionStartTime: data.questionStartTime ? parseInt(data.questionStartTime, 10) : null,
+    teacherId: data.teacherId,
+    historySaved: data.historySaved === 'true',
   };
 }
 
