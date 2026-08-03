@@ -124,6 +124,12 @@ export default function Landing() {
           </div>
 
           <div className="flex items-center gap-4 relative z-10">
+            <a
+              href="/play"
+              className="hidden sm:inline-block text-sm font-semibold text-white/90 hover:text-white transition-colors border border-white/20 px-4 py-2 rounded-lg hover:bg-white/10"
+            >
+              Join Quiz
+            </a>
             <Link
               to="/login"
               className="text-sm font-semibold text-white/90 hover:text-white transition-colors"
@@ -189,6 +195,11 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-8 text-sm text-white/70 font-semibold">Free forever for teachers • No training required</p>
+            <div className="mt-6">
+              <a href="/play" className="text-white/60 hover:text-white underline underline-offset-4 text-sm font-semibold transition-colors">
+                Are you a student? Click here to join a quiz
+              </a>
+            </div>
           </AnimatedSection>
         </div>
       </section>
