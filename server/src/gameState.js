@@ -159,6 +159,7 @@ async function addPlayer(code, socketId, name) {
   let existingSocketId = null;
   let oldScore = 0;
   let hasAnswered = false;
+  let oldAnswer = null;
 
   for (const [sId, p] of playersMap.entries()) {
     if (p.name.toLowerCase() === name.toLowerCase()) {
@@ -174,11 +175,17 @@ async function addPlayer(code, socketId, name) {
     const rawOldScore = await redis.zScore(`room:${code}:scores`, existingSocketId);
     oldScore = rawOldScore ? parseFloat(rawOldScore) : 0;
     hasAnswered = await redis.sIsMember(`room:${code}:answered`, existingSocketId);
+    
+    if (hasAnswered) {
+      const rawAnswer = await redis.hGet(`room:${code}:answers`, existingSocketId);
+      if (rawAnswer) oldAnswer = JSON.parse(rawAnswer);
+    }
 
     pipeline.hDel(`room:${code}:players`, existingSocketId);
     pipeline.zRem(`room:${code}:scores`, existingSocketId);
     if (hasAnswered) {
       pipeline.sRem(`room:${code}:answered`, existingSocketId);
+      pipeline.hDel(`room:${code}:answers`, existingSocketId);
     }
   }
 
@@ -188,6 +195,9 @@ async function addPlayer(code, socketId, name) {
   pipeline.zAdd(`room:${code}:scores`, { score: oldScore, value: socketId });
   if (hasAnswered) {
     pipeline.sAdd(`room:${code}:answered`, socketId);
+    if (oldAnswer) {
+      pipeline.hSet(`room:${code}:answers`, socketId, JSON.stringify(oldAnswer));
+    }
   }
   
   await pipeline.exec();
@@ -325,6 +335,7 @@ async function removeRoom(code) {
   pipeline.del(`room:${code}:players`);
   pipeline.del(`room:${code}:scores`);
   pipeline.del(`room:${code}:answered`);
+  pipeline.del(`room:${code}:answers`);
   pipeline.del(`room:${code}:questions`);
   await pipeline.exec();
   questionsCache.delete(code);
@@ -408,11 +419,16 @@ async function getActiveRooms() {
  * Marks a player as having answered the current question.
  * @param {string} code
  * @param {string} socketId
+ * @param {Array<number>} answerIndices
  */
-async function markAnswered(code, socketId) {
+async function markAnswered(code, socketId, answerIndices = []) {
   const redis = await getRedisClient();
   const added = await redis.sAdd(`room:${code}:answered`, socketId);
+  if (added) {
+    await redis.hSet(`room:${code}:answers`, socketId, JSON.stringify(answerIndices));
+  }
   await redis.expire(`room:${code}:answered`, 86400);
+  await redis.expire(`room:${code}:answers`, 86400);
   return added;
 }
 
@@ -425,6 +441,18 @@ async function markAnswered(code, socketId) {
 async function hasAnswered(code, socketId) {
   const redis = await getRedisClient();
   return await redis.sIsMember(`room:${code}:answered`, socketId);
+}
+
+/**
+ * Gets a player's submitted answer for the current question.
+ * @param {string} code
+ * @param {string} socketId
+ * @returns {Promise<Array<number>|null>}
+ */
+async function getAnswer(code, socketId) {
+  const redis = await getRedisClient();
+  const raw = await redis.hGet(`room:${code}:answers`, socketId);
+  return raw ? JSON.parse(raw) : null;
 }
 
 /**
@@ -444,6 +472,7 @@ async function getAnsweredCount(code) {
 async function clearAnswered(code) {
   const redis = await getRedisClient();
   await redis.del(`room:${code}:answered`);
+  await redis.del(`room:${code}:answers`);
 }
 
 // ─── Score helpers ────────────────────────────────────────────────────
@@ -490,6 +519,7 @@ module.exports = {
   getActiveRooms,
   markAnswered,
   hasAnswered,
+  getAnswer,
   getAnsweredCount,
   clearAnswered,
   getScore,

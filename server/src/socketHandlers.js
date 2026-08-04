@@ -13,6 +13,7 @@ const {
   getActiveRooms,
   markAnswered,
   hasAnswered,
+  getAnswer,
   getAnsweredCount,
   clearAnswered,
   getScore,
@@ -208,6 +209,10 @@ function registerHandlers(io) {
           const question = questions[room.currentQuestionIndex];
           if (question) {
             const alreadyAnswered = await hasAnswered(roomCode, socket.id);
+            let previousAnswer = null;
+            if (alreadyAnswered) {
+              previousAnswer = await getAnswer(roomCode, socket.id);
+            }
             socket.emit('question:new', {
               questionIndex: room.currentQuestionIndex,
               type: question.type,
@@ -218,6 +223,7 @@ function registerHandlers(io) {
               serverStartTime: room.questionStartTime,
               serverTimeNow: Date.now(),
               hasAnswered: alreadyAnswered,
+              previousAnswer,
             });
           }
         }
@@ -285,7 +291,7 @@ function registerHandlers(io) {
         }
 
         // Mark as answered (returns 1 if added, 0 if already existed)
-        const added = await markAnswered(roomCode, socket.id);
+        const added = await markAnswered(roomCode, socket.id, answerIndices);
         if (added === 0) {
           return safeCallback({ success: false, error: 'You have already answered this question' });
         }
