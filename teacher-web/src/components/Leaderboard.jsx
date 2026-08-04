@@ -23,7 +23,8 @@ export default function Leaderboard({
   onNextQuestion,
   onBackHome,
   plan,
-  roomCode
+  roomCode,
+  onEditQuestions
 }) {
 
 
@@ -203,13 +204,21 @@ export default function Leaderboard({
               🏠 Home
             </button>
           ) : (
-            <button
-              className="bg-gradient-to-r from-[var(--accent-success)] to-emerald-400 text-white px-10 py-4 rounded-2xl font-black text-lg uppercase tracking-widest hover:scale-105 transition-all shadow-[0_5px_20px_var(--accent-success-glow)]"
-              onClick={onNextQuestion}
-              id="next-question-btn"
-            >
-              Next Question 🚀
-            </button>
+            <div className="flex gap-4 items-center">
+              <button
+                className="btn-outline px-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest"
+                onClick={onEditQuestions}
+              >
+                Edit Upcoming Questions
+              </button>
+              <button
+                className="bg-gradient-to-r from-[var(--accent-success)] to-emerald-400 text-white px-10 py-4 rounded-2xl font-black text-lg uppercase tracking-widest hover:scale-105 transition-all shadow-[0_5px_20px_var(--accent-success-glow)]"
+                onClick={onNextQuestion}
+                id="next-question-btn"
+              >
+                Next Question 🚀
+              </button>
+            </div>
           )}
         </div>
       </div>

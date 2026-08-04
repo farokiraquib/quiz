@@ -7,6 +7,7 @@ import Lobby from '../components/Lobby';
 import GameControl from '../components/GameControl';
 import Leaderboard from '../components/Leaderboard';
 import History from '../components/History';
+import QuestionEditorModal from '../components/QuestionEditorModal';
 import { Sparkles, LogOut, User, History as HistoryIcon } from 'lucide-react';
 
 export default function Dashboard() {
@@ -69,6 +70,7 @@ export default function Dashboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [isGameOver, setIsGameOver] = useState(false);
   const [showStudentLeaderboard, setShowStudentLeaderboard] = useState(false);
+  const [isEditingQuestions, setIsEditingQuestions] = useState(false);
 
   // ── Socket Event Handlers ──
 
@@ -423,6 +425,7 @@ export default function Dashboard() {
             onStart={handleStartQuiz}
             onLeaveKeepOpen={handleLeaveKeepOpen}
             onEndGame={handleEndGame}
+            onEditQuestions={() => setIsEditingQuestions(true)}
           />
         )}
 
@@ -440,6 +443,7 @@ export default function Dashboard() {
             onEndQuestion={handleEndQuestion}
             showStudentLeaderboard={showStudentLeaderboard}
             setShowStudentLeaderboard={setShowStudentLeaderboard}
+            onEditQuestions={() => setIsEditingQuestions(true)}
           />
         )}
 
@@ -451,9 +455,27 @@ export default function Dashboard() {
             onBackHome={handleEndGame}
             plan={fullProfile?.plan || 'FREE'}
             roomCode={roomCode}
+            onEditQuestions={() => setIsEditingQuestions(true)}
           />
         )}
       </div>
+
+      {isEditingQuestions && (
+        <QuestionEditorModal
+          initialQuestions={questions}
+          questionIndex={questionIndex}
+          onSave={(updatedQuestions) => {
+            setQuestions(updatedQuestions);
+            socket.emit('host:update-questions', {
+              roomCode,
+              hostSecret,
+              questions: updatedQuestions,
+            });
+            setIsEditingQuestions(false);
+          }}
+          onClose={() => setIsEditingQuestions(false)}
+        />
+      )}
     </div>
   );
 }
