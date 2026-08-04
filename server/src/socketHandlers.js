@@ -207,6 +207,7 @@ function registerHandlers(io) {
         if (room.status === 'playing') {
           const question = questions[room.currentQuestionIndex];
           if (question) {
+            const alreadyAnswered = await hasAnswered(roomCode, socket.id);
             socket.emit('question:new', {
               questionIndex: room.currentQuestionIndex,
               type: question.type,
@@ -216,6 +217,7 @@ function registerHandlers(io) {
               timeLimit: question.timeLimit,
               serverStartTime: room.questionStartTime,
               serverTimeNow: Date.now(),
+              hasAnswered: alreadyAnswered,
             });
           }
         }

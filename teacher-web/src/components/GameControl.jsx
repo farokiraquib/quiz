@@ -19,7 +19,6 @@ export default function GameControl({
   totalPlayers,
   timeLimit,
   onEndQuestion,
-  onEndQuestion,
   showStudentLeaderboard,
   setShowStudentLeaderboard,
   onEditQuestions,

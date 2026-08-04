@@ -5,15 +5,15 @@ const COLORS = ['var(--option-a)', 'var(--option-b)', 'var(--option-c)', 'var(--
 const LETTERS = ['A', 'B', 'C', 'D'];
 
 export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, socket }) {
-  const { questionIndex, text, imageUrl, options, timeLimit, serverStartTime, serverTimeNow, type } = question;
+  const { questionIndex, text, imageUrl, options, timeLimit, serverStartTime, serverTimeNow, type, hasAnswered: alreadyAnswered } = question;
   
   const [timeLeft, setTimeLeft] = useState(timeLimit);
-  const [hasAnswered, setHasAnswered] = useState(false);
+  const [hasAnswered, setHasAnswered] = useState(alreadyAnswered || false);
   const [selectedIndices, setSelectedIndices] = useState([]);
   const [zoomedImage, setZoomedImage] = useState(null);
 
   useEffect(() => {
-    setHasAnswered(false);
+    setHasAnswered(alreadyAnswered || false);
     setSelectedIndices([]);
 
     const elapsed = (serverStartTime && serverTimeNow) 
