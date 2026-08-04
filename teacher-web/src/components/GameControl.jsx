@@ -22,7 +22,12 @@ export default function GameControl({
   showStudentLeaderboard,
   setShowStudentLeaderboard,
 }) {
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const elapsed = (question?.serverStartTime && question?.serverTimeNow) 
+    ? Math.max(0, (question.serverTimeNow - question.serverStartTime) / 1000) 
+    : 0;
+  const initialTimeLeft = Math.ceil(Math.max(0, timeLimit - elapsed));
+
+  const [timeLeft, setTimeLeft] = useState(initialTimeLeft);
   const [isTimerDone, setIsTimerDone] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editableQuestions, setEditableQuestions] = useState([...initialQuestions]);
@@ -35,7 +40,12 @@ export default function GameControl({
 
   // Reset timer when question changes
   useEffect(() => {
-    setTimeLeft(timeLimit);
+    const el = (question?.serverStartTime && question?.serverTimeNow) 
+      ? Math.max(0, (question.serverTimeNow - question.serverStartTime) / 1000) 
+      : 0;
+    const startLeft = Math.ceil(Math.max(0, timeLimit - el));
+    
+    setTimeLeft(startLeft);
     setIsTimerDone(false);
 
     intervalRef.current = setInterval(() => {
@@ -52,7 +62,7 @@ export default function GameControl({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [questionIndex, timeLimit]);
+  }, [questionIndex, timeLimit, question]);
 
   // Auto-end question when timer is done
   useEffect(() => {

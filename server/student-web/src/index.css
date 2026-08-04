@@ -20,11 +20,11 @@
   --yellow: #f59e0b;
   --red: #ef4444;
   
-  /* Solid colors for options */
-  --option-a: #dc2626; /* Red */
-  --option-b: #2563eb; /* Blue */
-  --option-c: #d97706; /* Amber */
-  --option-d: #16a34a; /* Green */
+  /* Solid colors for options (brighter for dark mode) */
+  --option-a: #ef4444; /* Red 500 */
+  --option-b: #3b82f6; /* Blue 500 */
+  --option-c: #f59e0b; /* Amber 500 */
+  --option-d: #10b981; /* Emerald 500 */
   
   --font: 'Inter', -apple-system, sans-serif;
 }

@@ -92,7 +92,12 @@ export default function Dashboard() {
           
           if (response.room.status === 'playing') {
             setQuestionIndex(response.room.currentQuestionIndex);
-            setCurrentQuestion(response.room.questions[response.room.currentQuestionIndex]);
+            const currentQ = response.room.questions[response.room.currentQuestionIndex];
+            if (currentQ) {
+              currentQ.serverStartTime = response.room.questionStartTime;
+              currentQ.serverTimeNow = response.serverTimeNow;
+              setCurrentQuestion(currentQ);
+            }
             setScreen('playing');
           } else if (response.room.status === 'finished') {
             setScreen('finished');
@@ -107,7 +112,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Player joined (throttled 300ms)
+  // Player joined
   useSocket(
     'room:player-joined',
     useCallback((data) => {
@@ -120,8 +125,7 @@ export default function Dashboard() {
         }
         return [...prev, data];
       });
-    }, []),
-    300
+    }, [])
   );
 
   // Player left

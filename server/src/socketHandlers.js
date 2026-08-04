@@ -132,7 +132,7 @@ function registerHandlers(io) {
         const players = Array.from(playersMap.values());
         const questions = await getQuestions(data.roomCode);
         
-        callback({ success: true, room: { ...room, players, questions } });
+        callback({ success: true, room: { ...room, players, questions }, serverTimeNow: Date.now() });
       } catch (err) {
         console.error('[host:rejoin-room] Error:', err);
         callback({ success: false });
@@ -215,6 +215,7 @@ function registerHandlers(io) {
               options: question.options,
               timeLimit: question.timeLimit,
               serverStartTime: room.questionStartTime,
+              serverTimeNow: Date.now(),
             });
           }
         }
@@ -253,6 +254,7 @@ function registerHandlers(io) {
           options: question.options,
           timeLimit: question.timeLimit,
           serverStartTime: Date.now(),
+          serverTimeNow: Date.now(),
         });
 
         console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1}/${questions.length} started`);
@@ -421,6 +423,7 @@ function registerHandlers(io) {
             options: question.options,
             timeLimit: question.timeLimit,
             serverStartTime: Date.now(),
+            serverTimeNow: Date.now(),
           });
 
           console.log(`[Room ${data.roomCode}] Question ${nextIndex + 1}/${questions.length} started`);

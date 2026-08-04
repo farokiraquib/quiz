@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
 const COLORS = ['var(--option-a)', 'var(--option-b)', 'var(--option-c)', 'var(--option-d)'];
-const SHAPES = ['▲', '◆', '●', '■'];
+const LETTERS = ['A', 'B', 'C', 'D'];
 
 export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, socket }) {
-  const { questionIndex, text, imageUrl, options, timeLimit, serverStartTime, type } = question;
+  const { questionIndex, text, imageUrl, options, timeLimit, serverStartTime, serverTimeNow, type } = question;
   
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [hasAnswered, setHasAnswered] = useState(false);
@@ -16,7 +16,9 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
     setHasAnswered(false);
     setSelectedIndices([]);
 
-    const elapsed = serverStartTime ? Math.max(0, (Date.now() - serverStartTime) / 1000) : 0;
+    const elapsed = (serverStartTime && serverTimeNow) 
+      ? Math.max(0, (serverTimeNow - serverStartTime) / 1000) 
+      : (serverStartTime ? Math.max(0, (Date.now() - serverStartTime) / 1000) : 0);
     const remaining = Math.max(0, timeLimit - elapsed);
     setTimeLeft(Math.ceil(remaining));
 
@@ -121,7 +123,7 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
               }}
               onClick={() => handleOptionClick(i)}
             >
-              <span className="option-shape">{SHAPES[i % SHAPES.length]}</span>
+              <span className="option-shape" style={{ fontSize: '1.2rem' }}>{LETTERS[i % LETTERS.length]}</span>
               {optionImg && (
                 <div 
                   onClick={(e) => { e.stopPropagation(); setZoomedImage(optionImg); }}
