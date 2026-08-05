@@ -74,10 +74,11 @@ export default function App() {
       setDeferredPrompt(e);
       
       const hideForever = localStorage.getItem('livequizz_hide_install_prompt');
+      const hideSession = sessionStorage.getItem('livequizz_hide_install_prompt_session');
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       
       // Show prompt if not already installed/standalone, hasn't chosen "Don't show again", and IS on a mobile device
-      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true' && isMobile) {
+      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true' && hideSession !== 'true' && isMobile) {
         setShowInstallPrompt(true);
       }
     };
@@ -99,6 +100,9 @@ export default function App() {
   const handleDismissInstall = () => {
     if (dontAskAgain) {
       localStorage.setItem('livequizz_hide_install_prompt', 'true');
+    } else {
+      // Even if they click later without checking, we could just hide it for the session
+      sessionStorage.setItem('livequizz_hide_install_prompt_session', 'true');
     }
     setShowInstallPrompt(false);
   };
@@ -171,7 +175,14 @@ export default function App() {
               <input 
                 type="checkbox" 
                 checked={dontAskAgain}
-                onChange={(e) => setDontAskAgain(e.target.checked)}
+                onChange={(e) => {
+                  setDontAskAgain(e.target.checked);
+                  if (e.target.checked) {
+                    localStorage.setItem('livequizz_hide_install_prompt', 'true');
+                  } else {
+                    localStorage.removeItem('livequizz_hide_install_prompt');
+                  }
+                }}
               />
               Don't show this again
             </label>
