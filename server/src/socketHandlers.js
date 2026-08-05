@@ -470,6 +470,9 @@ function registerHandlers(io) {
               console.error('Failed to save room history:', err);
             }
           }
+          
+          await removeRoom(data.roomCode);
+          console.log(`[Room ${data.roomCode}] Room shut down automatically after quiz finished`);
         }
       } catch (err) {
         console.error('[host:next-question] Error:', err);
