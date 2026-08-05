@@ -34,10 +34,14 @@ export default function ResultScreen({ questionResult, selectedAnswer, socketId,
     return "😔";
   };
 
-  const correctOptionTexts = actualCorrect.map(idx => {
-    const opt = question?.options[idx];
-    return opt?.text || opt || `Option ${idx + 1}`;
-  }).join(' & ');
+  const getOptionText = (idx) => {
+    const opt = question?.options?.[idx];
+    if (!opt) return `Option ${idx + 1}`;
+    const text = typeof opt === 'object' ? opt.text : opt;
+    return text || `Option ${idx + 1}`;
+  };
+
+  const correctOptionTexts = actualCorrect.map(idx => getOptionText(idx)).join(' & ');
 
   return (
     <div className="screen bg-black">

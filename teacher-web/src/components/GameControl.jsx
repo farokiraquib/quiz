@@ -171,7 +171,7 @@ export default function GameControl({
                   )}
                   <div className="flex justify-between items-center w-full">
                     <span className="text-white font-bold text-lg md:text-xl">
-                      {opt?.text || opt}
+                      {typeof opt === 'object' ? opt.text : opt}
                     </span>
                     <span className="text-white/50 font-bold ml-2">
                       {count} <span className="text-xs font-normal">picks</span>
