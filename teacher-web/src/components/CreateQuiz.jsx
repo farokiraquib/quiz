@@ -104,7 +104,9 @@ export default function CreateQuiz({ onRoomCreated }) {
       const q = questions[i];
       if (!q.text.trim()) return `Question ${i + 1}: Please enter a question`;
       for (let j = 0; j < q.options.length; j++) {
-        if (!q.options[j].text.trim()) return `Question ${i + 1}: Option ${String.fromCharCode(65 + j)} is empty`;
+        if (!q.options[j].text.trim() && !q.options[j].imageUrl) {
+          return `Question ${i + 1}: Option ${String.fromCharCode(65 + j)} is empty`;
+        }
       }
     }
     return '';
