@@ -41,7 +41,11 @@ async function createRoom(hostSocketId, questions, customRoomCode, password) {
   const redis = await getRedisClient();
 
   let code = customRoomCode;
-  if (!code || (await redis.exists(`room:${code}`))) {
+  if (code) {
+    if (await redis.exists(`room:${code}`)) {
+      throw new Error(`The custom room code "${code}" is currently in use. Please try another one.`);
+    }
+  } else {
     code = await generateRoomCode();
   }
 

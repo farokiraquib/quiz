@@ -108,7 +108,7 @@ function registerHandlers(io) {
         callback({ success: true, roomCode, hostSecret });
       } catch (err) {
         console.error('[host:create-room] Error:', err);
-        callback({ success: false, error: 'Failed to create room' });
+        callback({ success: false, error: err.message || 'Failed to create room' });
       }
     });
 
