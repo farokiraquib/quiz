@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 
-const COLORS = ['var(--option-a)', 'var(--option-b)', 'var(--option-c)', 'var(--option-d)'];
 const LETTERS = ['A', 'B', 'C', 'D'];
 
 export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, socket }) {
@@ -117,7 +116,6 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
               key={i}
               className={`option-btn animate-fade-in-up ${isSelected ? 'option-selected' : ''} ${isDimmed ? 'option-dimmed' : ''}`}
               style={{
-                backgroundColor: COLORS[i % COLORS.length],
                 animationDelay: `${0.15 + i * 0.08}s`,
                 animationFillMode: 'both'
               }}

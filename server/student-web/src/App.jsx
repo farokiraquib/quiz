@@ -63,49 +63,7 @@ export default function App() {
     };
   }, []);
 
-  // PWA Install Prompt Logic
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
-  const [dontAskAgain, setDontAskAgain] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      
-      const hideForever = localStorage.getItem('livequizz_hide_install_prompt');
-      const hideSession = sessionStorage.getItem('livequizz_hide_install_prompt_session');
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // Show prompt if not already installed/standalone, hasn't chosen "Don't show again", and IS on a mobile device
-      if (!window.matchMedia('(display-mode: standalone)').matches && hideForever !== 'true' && hideSession !== 'true' && isMobile) {
-        setShowInstallPrompt(true);
-      }
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      setShowInstallPrompt(false);
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`Install prompt outcome: ${outcome}`);
-      setDeferredPrompt(null);
-    }
-  };
-
-  const handleDismissInstall = () => {
-    if (dontAskAgain) {
-      localStorage.setItem('livequizz_hide_install_prompt', 'true');
-    } else {
-      // Even if they click later without checking, we could just hide it for the session
-      sessionStorage.setItem('livequizz_hide_install_prompt_session', 'true');
-    }
-    setShowInstallPrompt(false);
-  };
+  // PWA logic removed
 
   const resetToJoin = () => {
     socket.disconnect();
@@ -157,38 +115,6 @@ export default function App() {
         />
       )}
 
-      {/* PWA Install Banner */}
-      {showInstallPrompt && (
-        <div className="pwa-install-banner">
-          <div className="pwa-install-header">
-            <div className="pwa-install-text">
-              <span className="pwa-install-title">Install LiveQuizz</span>
-              <span className="pwa-install-desc">Add to home screen for faster access</span>
-            </div>
-            <div className="pwa-install-actions">
-              <button onClick={handleDismissInstall} className="pwa-btn-later">Later</button>
-              <button onClick={handleInstallClick} className="pwa-btn-install">Install</button>
-            </div>
-          </div>
-          <div className="pwa-install-footer">
-            <label className="pwa-checkbox-label">
-              <input 
-                type="checkbox" 
-                checked={dontAskAgain}
-                onChange={(e) => {
-                  setDontAskAgain(e.target.checked);
-                  if (e.target.checked) {
-                    localStorage.setItem('livequizz_hide_install_prompt', 'true');
-                  } else {
-                    localStorage.removeItem('livequizz_hide_install_prompt');
-                  }
-                }}
-              />
-              Don't show this again
-            </label>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
