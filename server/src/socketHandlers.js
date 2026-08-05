@@ -227,6 +227,19 @@ function registerHandlers(io) {
               previousAnswer,
             });
           }
+        } else if (room.status === 'showing_results') {
+          const currentQuestion = questions[room.currentQuestionIndex];
+          if (currentQuestion) {
+            const leaderboard = await buildLeaderboard(roomCode);
+            socket.emit('question:result', {
+              correctIndices: currentQuestion.correctIndices || [currentQuestion.correctIndex],
+              leaderboard,
+              showLeaderboard: true,
+            });
+          }
+        } else if (room.status === 'finished') {
+          const leaderboard = await buildLeaderboard(roomCode);
+          socket.emit('game:finished', { leaderboard });
         }
       } catch (err) {
         console.error('[student:join-room] Error:', err);
@@ -387,6 +400,8 @@ function registerHandlers(io) {
               console.error('Failed to save room history:', err);
             }
           }
+        } else {
+          await setRoomField(data.roomCode, 'status', 'showing_results');
         }
 
         console.log(`[Room ${data.roomCode}] Question ${room.currentQuestionIndex + 1} ended`);
