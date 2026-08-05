@@ -63,8 +63,9 @@ export default function GameOverScreen({ finalLeaderboard, socketId, playerName,
       </div>
 
       <div className="animate-fade-in-up" style={{ width: '100%', maxWidth: 400, animationDelay: '0.5s', animationFillMode: 'both' }}>
+        <p className="subtitle" style={{ marginBottom: 16, color: 'var(--text-muted)' }}>You can safely leave this page now.</p>
         <button className="btn-primary" onClick={onPlayAgain}>
-          Done
+          Leave Quiz
         </button>
       </div>
     </div>

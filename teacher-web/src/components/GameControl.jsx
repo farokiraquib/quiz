@@ -22,6 +22,7 @@ export default function GameControl({
   showStudentLeaderboard,
   setShowStudentLeaderboard,
   onEditQuestions,
+  optionCounts = {},
 }) {
   const elapsed = (question?.serverStartTime && question?.serverTimeNow) 
     ? Math.max(0, (question.serverTimeNow - question.serverStartTime) / 1000) 
@@ -146,24 +147,40 @@ export default function GameControl({
 
         {/* Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-          {question?.options?.map((opt, i) => (
-            <div
-              key={i}
-              className="rounded-2xl p-5 flex items-center gap-4 bg-[#171717] border border-white/10"
-            >
-              <span className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center text-lg font-black shrink-0">
-                {OPTION_COLORS[i].label}
-              </span>
-              <div className="flex flex-col flex-1">
-                {opt?.imageUrl && (
-                  <img src={opt.imageUrl} alt="Option" className="max-h-24 rounded-lg mb-3 object-contain border border-white/10 bg-black/20" />
-                )}
-                <span className="text-white font-bold text-lg md:text-xl">
-                  {opt?.text || opt}
+          {question?.options?.map((opt, i) => {
+            const count = optionCounts[i] || 0;
+            const percent = totalPlayers > 0 ? (count / totalPlayers) * 100 : 0;
+            
+            return (
+              <div
+                key={i}
+                className="relative rounded-2xl p-5 flex items-center gap-4 bg-[#171717] border border-white/10 overflow-hidden"
+              >
+                {/* Live Progress Bar Background */}
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-white/10 transition-all duration-300 ease-out z-0" 
+                  style={{ width: `${percent}%` }}
+                />
+                
+                <span className="w-10 h-10 rounded-xl bg-white text-black flex items-center justify-center text-lg font-black shrink-0 relative z-10">
+                  {OPTION_COLORS[i].label}
                 </span>
+                <div className="flex flex-col flex-1 relative z-10">
+                  {opt?.imageUrl && (
+                    <img src={opt.imageUrl} alt="Option" className="max-h-24 rounded-lg mb-3 object-contain border border-white/10 bg-black/20" />
+                  )}
+                  <div className="flex justify-between items-center w-full">
+                    <span className="text-white font-bold text-lg md:text-xl">
+                      {opt?.text || opt}
+                    </span>
+                    <span className="text-white/50 font-bold ml-2">
+                      {count} <span className="text-xs font-normal">picks</span>
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Answer Progress */}

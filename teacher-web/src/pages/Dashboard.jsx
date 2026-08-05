@@ -69,7 +69,8 @@ export default function Dashboard() {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [showStudentLeaderboard, setShowStudentLeaderboard] = useState(false);
+  const [showStudentLeaderboard, setShowStudentLeaderboard] = useState(true);
+  const [optionCounts, setOptionCounts] = useState({});
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
 
   // ── Socket Event Handlers ──
@@ -86,6 +87,7 @@ export default function Dashboard() {
           setRoomCode(savedRoom);
           setHostSecret(savedSecret);
           setQuestions(response.room.questions);
+          setOptionCounts({});
           
           if (response.room.players) {
              const playersList = Object.values(response.room.players || {});
@@ -140,9 +142,12 @@ export default function Dashboard() {
 
   // Answer received (throttled 200ms)
   useSocket(
-    'game:answer-received',
+    'host:player-answered',
     useCallback((data) => {
       setAnsweredCount(data.answeredCount ?? ((prev) => prev + 1));
+      if (data.optionCounts) {
+        setOptionCounts(data.optionCounts);
+      }
     }, []),
     200
   );
@@ -184,6 +189,7 @@ export default function Dashboard() {
     setCurrentQuestion(q);
     setQuestionIndex(0);
     setAnsweredCount(0);
+    setOptionCounts({});
 
     socket.emit('host:start-question', {
       roomCode,
@@ -213,6 +219,7 @@ export default function Dashboard() {
     setCurrentQuestion(q);
     setQuestionIndex(nextIndex);
     setAnsweredCount(0);
+    setOptionCounts({});
 
     socket.emit('host:next-question', { roomCode });
 
@@ -229,6 +236,7 @@ export default function Dashboard() {
     setCurrentQuestion(null);
     setQuestionIndex(0);
     setAnsweredCount(0);
+    setOptionCounts({});
     setLeaderboard([]);
     setIsGameOver(false);
   }, []);
@@ -246,6 +254,7 @@ export default function Dashboard() {
     setCurrentQuestion(null);
     setQuestionIndex(0);
     setAnsweredCount(0);
+    setOptionCounts({});
     setLeaderboard([]);
     setIsGameOver(false);
   }, [roomCode]);
@@ -444,6 +453,7 @@ export default function Dashboard() {
             showStudentLeaderboard={showStudentLeaderboard}
             setShowStudentLeaderboard={setShowStudentLeaderboard}
             onEditQuestions={() => setIsEditingQuestions(true)}
+            optionCounts={optionCounts}
           />
         )}
 

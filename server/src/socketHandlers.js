@@ -14,6 +14,7 @@ const {
   markAnswered,
   hasAnswered,
   getAnswer,
+  getOptionCounts,
   getAnsweredCount,
   clearAnswered,
   getScore,
@@ -326,16 +327,13 @@ function registerHandlers(io) {
         const maxTimeMs = currentQuestion.timeLimit * 1000;
         const score = calculateScore(accuracy, timeTaken, maxTimeMs);
 
-        const [_, answeredCount, totalPlayers] = await Promise.all([
-          addScore(roomCode, socket.id, score),
-          getAnsweredCount(roomCode),
-          getPlayerCount(roomCode)
-        ]);
+        await addScore(roomCode, socket.id, score);
 
         // Notify host ONLY with answer count
-        io.to(room.hostSocketId).emit('game:answer-received', {
-          answeredCount,
-          totalPlayers,
+        io.to(room.hostSocketId).emit('host:player-answered', {
+          answeredCount: await getAnsweredCount(roomCode),
+          totalPlayers: await getPlayerCount(roomCode),
+          optionCounts: await getOptionCounts(roomCode),
         });
 
         console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${accuracy > 0 ? 'correct' : 'wrong'} (+${score})`);
@@ -470,9 +468,8 @@ function registerHandlers(io) {
         const room = await getRoom(data.roomCode);
         if (!room || room.hostSocketId !== socket.id) return;
         
-        io.to(data.roomCode).emit('room:host-disconnected', {
-          message: 'The host has ended the game.',
-        });
+        const leaderboard = await buildLeaderboard(data.roomCode);
+        io.to(data.roomCode).emit('game:finished', { leaderboard, message: 'The host has ended the game.' });
         
         // Also save history if not saved yet
         if (!room.historySaved && room.teacherId) {

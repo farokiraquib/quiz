@@ -1,5 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Download } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const PODIUM_CONFIG = [
   { rank: 2, label: '🥈', color: '#94a3b8', height: '120px', order: 1, glow: 'rgba(148,163,184,0.4)' },
@@ -39,28 +41,48 @@ export default function Leaderboard({
 
   const isPaidPlan = plan && plan !== 'FREE';
 
-  const downloadCSV = () => {
+  const downloadPDF = () => {
     if (!isPaidPlan) {
-      alert("CSV Export is only available on paid plans (Semester Pass, Annual Pro, Institute). Please upgrade to use this feature.");
+      alert("PDF Export is only available on paid plans (Semester Pass, Annual Pro, Institute). Please upgrade to use this feature.");
       return;
     }
     
     if (leaderboard.length === 0) return;
     
-    const headers = ['Rank', 'Student Name', 'Score'];
-    const csvContent = [
-      headers.join(','),
-      ...leaderboard.map((p, i) => `${p.rank || i + 1},"${p.name.replace(/"/g, '""')}",${p.score}`)
-    ].join('\n');
+    const doc = new jsPDF();
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `LiveQuizz_Results_${roomCode || 'Session'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Add Header
+    doc.setFontSize(22);
+    doc.setTextColor(40, 40, 40);
+    doc.text('LiveQuizz Results', 14, 20);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Room Code: ${roomCode || 'Session'}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 36);
+    doc.text(`Total Students: ${leaderboard.length}`, 14, 42);
+    
+    // Build table data
+    const tableColumn = ["Rank", "Student Name", "Score"];
+    const tableRows = [];
+    
+    leaderboard.forEach((p, i) => {
+      const rank = p.rank || i + 1;
+      tableRows.push([rank, p.name, p.score]);
+    });
+    
+    // Add Table
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 50,
+      theme: 'grid',
+      headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+      styles: { fontSize: 10, cellPadding: 4 },
+    });
+    
+    doc.save(`LiveQuizz_Results_${roomCode || 'Session'}.pdf`);
   };
 
   return (
@@ -182,16 +204,16 @@ export default function Leaderboard({
         <div className="flex flex-wrap items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
           {isGameOver && (
             <button
-              className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
                 isPaidPlan 
-                  ? 'bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] text-white shadow-[0_5px_15px_var(--accent-primary-glow)] hover:-translate-y-1' 
-                  : 'bg-white/10 text-white/50 border border-white/10 hover:bg-white/20'
+                  ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg' 
+                  : 'bg-[#171717] text-white/40 border border-white/5 cursor-not-allowed'
               }`}
-              onClick={downloadCSV}
-              title={isPaidPlan ? "Download Gradebook as CSV" : "Upgrade your plan to download CSV"}
+              onClick={downloadPDF}
+              title={isPaidPlan ? "Download Gradebook as PDF" : "Upgrade your plan to download PDF"}
             >
-              <Download className="w-5 h-5" />
-              {isPaidPlan ? 'Export CSV' : 'Export CSV (Pro)'}
+              <FileText size={20} />
+              {isPaidPlan ? 'Export PDF' : 'Export PDF (Pro)'}
             </button>
           )}
 

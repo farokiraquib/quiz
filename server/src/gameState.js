@@ -456,6 +456,28 @@ async function getAnswer(code, socketId) {
 }
 
 /**
+ * Gets the tally of how many players selected each option for the current question.
+ * @param {string} code
+ * @returns {Promise<Record<number, number>>}
+ */
+async function getOptionCounts(code) {
+  const redis = await getRedisClient();
+  const answers = await redis.hGetAll(`room:${code}:answers`);
+  const counts = {};
+  for (const socketId in answers) {
+    try {
+      const indices = JSON.parse(answers[socketId]);
+      for (const index of indices) {
+        counts[index] = (counts[index] || 0) + 1;
+      }
+    } catch (e) {
+      console.error('Failed to parse answer:', e);
+    }
+  }
+  return counts;
+}
+
+/**
  * Gets the count of players who answered the current question.
  * @param {string} code
  * @returns {Promise<number>}
@@ -520,6 +542,7 @@ module.exports = {
   markAnswered,
   hasAnswered,
   getAnswer,
+  getOptionCounts,
   getAnsweredCount,
   clearAnswered,
   getScore,
