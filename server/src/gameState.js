@@ -425,10 +425,19 @@ async function markAnswered(code, socketId, answerIndices = []) {
   const redis = await getRedisClient();
   const added = await redis.sAdd(`room:${code}:answered`, socketId);
   if (added) {
-    await redis.hSet(`room:${code}:answers`, socketId, JSON.stringify(answerIndices));
+    const multi = redis.multi();
+    multi.hSet(`room:${code}:answers`, socketId, JSON.stringify(answerIndices));
+    
+    // Efficiently increment option tallies in Redis
+    const indices = Array.isArray(answerIndices) ? answerIndices : [answerIndices];
+    for (const idx of indices) {
+      multi.hIncrBy(`room:${code}:option_tallies`, idx.toString(), 1);
+    }
+    await multi.exec();
   }
   await redis.expire(`room:${code}:answered`, 86400);
   await redis.expire(`room:${code}:answers`, 86400);
+  await redis.expire(`room:${code}:option_tallies`, 86400);
   return added;
 }
 
@@ -462,17 +471,10 @@ async function getAnswer(code, socketId) {
  */
 async function getOptionCounts(code) {
   const redis = await getRedisClient();
-  const answers = await redis.hGetAll(`room:${code}:answers`);
+  const tallies = await redis.hGetAll(`room:${code}:option_tallies`);
   const counts = {};
-  for (const socketId in answers) {
-    try {
-      const indices = JSON.parse(answers[socketId]);
-      for (const index of indices) {
-        counts[index] = (counts[index] || 0) + 1;
-      }
-    } catch (e) {
-      console.error('Failed to parse answer:', e);
-    }
+  for (const idx in tallies) {
+    counts[idx] = parseInt(tallies[idx], 10);
   }
   return counts;
 }
@@ -495,6 +497,7 @@ async function clearAnswered(code) {
   const redis = await getRedisClient();
   await redis.del(`room:${code}:answered`);
   await redis.del(`room:${code}:answers`);
+  await redis.del(`room:${code}:option_tallies`);
 }
 
 // ─── Score helpers ────────────────────────────────────────────────────

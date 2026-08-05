@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Download, FileText } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const PODIUM_CONFIG = [
   { rank: 2, label: '🥈', color: '#94a3b8', height: '120px', order: 1, glow: 'rgba(148,163,184,0.4)' },
@@ -72,7 +72,7 @@ export default function Leaderboard({
     });
     
     // Add Table
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 50,

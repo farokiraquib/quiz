@@ -140,7 +140,7 @@ export default function Dashboard() {
     }, [])
   );
 
-  // Answer received (throttled 200ms)
+  // Answer received (throttled 50ms for snappier UI)
   useSocket(
     'host:player-answered',
     useCallback((data) => {
@@ -149,7 +149,7 @@ export default function Dashboard() {
         setOptionCounts(data.optionCounts);
       }
     }, []),
-    200
+    50
   );
 
   // Question result → show leaderboard

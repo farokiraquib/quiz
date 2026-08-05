@@ -74,27 +74,37 @@ export default function GameControl({
 
   return (
     <div className="screen-enter min-h-screen flex flex-col items-center p-4 md:p-8 relative bg-black">
-      <div className="max-w-4xl w-full relative">
-        <div className="absolute top-0 right-0 z-10 flex flex-col items-end md:flex-row gap-2 md:gap-4 md:items-center">
-          <label className="flex items-center gap-2 cursor-pointer text-xs md:text-sm text-white/70 hover:text-white transition-colors">
-            <input 
-              type="checkbox" 
-              checked={showStudentLeaderboard}
-              onChange={(e) => setShowStudentLeaderboard(e.target.checked)}
-              className="accent-yellow-400 cursor-pointer w-4 h-4"
-            />
-            Show Leaderboard to Students
-          </label>
-          <button 
-            onClick={onEditQuestions}
-            className="btn-outline text-xs md:text-sm py-2 px-4"
-          >
-            Edit Upcoming Questions
-          </button>
+      <div className="max-w-4xl w-full">
+        {/* Top Controls */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          
+          {/* Room Code Badge */}
+          <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 shadow-lg flex flex-col">
+            <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest mb-1">Room Code</span>
+            <span className="text-2xl font-black text-white tracking-[0.2em]">{roomCode}</span>
+          </div>
+
+          <div className="flex flex-col items-start md:items-end gap-3">
+            <label className="flex items-center gap-2 text-xs md:text-sm font-bold text-white/70 bg-[#0a0a0a] px-3 py-2 rounded-lg border border-white/10 select-none hover:text-white transition-colors">
+              <input 
+                type="checkbox" 
+                checked={showStudentLeaderboard}
+                onChange={(e) => setShowStudentLeaderboard(e.target.checked)}
+                className="accent-yellow-400 cursor-pointer w-4 h-4"
+              />
+              Show Leaderboard to Students
+            </label>
+            <button 
+              onClick={onEditQuestions}
+              className="btn-outline text-xs md:text-sm py-2 px-4"
+            >
+              Edit Upcoming Questions
+            </button>
+          </div>
         </div>
 
         {/* Question Header */}
-        <div className="flex items-center justify-between mb-8 pt-20 md:pt-0 animate-slide-in-down">
+        <div className="flex items-center justify-between mb-8 animate-slide-in-down">
           <div className="bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-3 flex items-center gap-3">
             <span className="text-xl">🎯</span>
             <span className="text-sm font-bold text-white/50 uppercase tracking-wider">Question</span>
