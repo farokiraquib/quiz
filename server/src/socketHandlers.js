@@ -287,6 +287,7 @@ function registerHandlers(io) {
 
     // ─── 4. STUDENT: SUBMIT ANSWER ───────────────────────────────────
     socket.on('student:submit-answer', async (data, callback) => {
+      const T1 = Date.now();
       const safeCallback = typeof callback === 'function' ? callback : () => {};
       try {
         if (!data || !data.roomCode || data.answerIndices === undefined) {
@@ -294,6 +295,8 @@ function registerHandlers(io) {
         }
 
         const { roomCode, answerIndices } = data;
+        console.log(`[PERF] T1 server-receive: ${T1}, delta from T0: ${T1 - (data.t0 || T1)}ms`);
+
         const room = await getRoom(roomCode);
 
         if (!room) {
@@ -342,12 +345,24 @@ function registerHandlers(io) {
 
         await addScore(roomCode, socket.id, score);
 
-        // Notify host ONLY with answer count
+        const T2 = Date.now();
+        console.log(`[PERF] T2 redis-done: ${T2}, T1→T2: ${T2 - T1}ms`);
+
+        // Notify host ONLY — fetch counts in parallel
+        const [answeredCount, totalPlayers, optionCounts] = await Promise.all([
+          getAnsweredCount(roomCode),
+          getPlayerCount(roomCode),
+          getOptionCounts(roomCode),
+        ]);
+
         io.to(room.hostSocketId).emit('host:player-answered', {
-          answeredCount: await getAnsweredCount(roomCode),
-          totalPlayers: await getPlayerCount(roomCode),
-          optionCounts: await getOptionCounts(roomCode),
+          answeredCount,
+          totalPlayers,
+          optionCounts,
         });
+
+        const T3 = Date.now();
+        console.log(`[PERF] T3 emit-to-host: ${T3}, T2→T3: ${T3 - T2}ms, total T1→T3: ${T3 - T1}ms`);
 
         console.log(`[Room ${roomCode}] Answer from ${socket.id}: ${accuracy > 0 ? 'correct' : 'wrong'} (+${score})`);
         safeCallback({ success: true, timeTaken });
