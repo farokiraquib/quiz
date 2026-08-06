@@ -314,7 +314,7 @@ export default function QuestionScreen({
                     numberOfLines={3}
                     adjustsFontSizeToFit
                   >
-                    {option?.text || option}
+                    {typeof option === 'object' && option !== null ? (option.text || '') : option}
                   </Text>
                 </TouchableOpacity>
               </Animated.View>

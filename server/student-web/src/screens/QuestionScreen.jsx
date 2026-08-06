@@ -110,8 +110,8 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
         {options.map((option, i) => {
           const isSelected = selectedIndices.includes(i);
           const isDimmed = hasAnswered && !isSelected;
-          const optionText = option?.text || option;
-          const optionImg = option?.imageUrl;
+          const optionText = typeof option === 'object' && option !== null ? (option.text || '') : option;
+          const optionImg = typeof option === 'object' && option !== null ? option.imageUrl : null;
 
           return (
             <div
