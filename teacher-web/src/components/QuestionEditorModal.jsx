@@ -137,8 +137,8 @@ export default function QuestionEditorModal({
   const isPastOrCurrent = qIndex <= questionIndex;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden shadow-2xl animate-scale-up">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50">
+      <div className="bg-[#0a0a0a] border-0 sm:border border-white/10 sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl flex flex-col md:flex-row overflow-hidden shadow-2xl animate-scale-up">
         
         {/* Sidebar Navigation */}
         <div className="w-full md:w-72 flex flex-col bg-[#050505] border-b md:border-b-0 md:border-r border-white/10 shrink-0">
@@ -202,14 +202,14 @@ export default function QuestionEditorModal({
         {/* Main Content Editor */}
         <div className="flex-1 flex flex-col relative md:h-full md:overflow-y-auto">
           {/* Top Bar Actions */}
-          <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-md border-b border-white/10 p-4 flex justify-between items-center">
-            <div>
+          <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-md border-b border-white/10 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center flex-wrap gap-2">
               <span className="text-sm font-bold text-white/50 uppercase">Question {qIndex + 1}</span>
               {isPastOrCurrent && (
-                <span className="ml-3 text-xs font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">Read Only (Already passed)</span>
+                <span className="text-[10px] sm:text-xs font-bold text-red-400 bg-red-400/10 px-2 py-1 rounded">Read Only</span>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
               {error && <span className="text-red-400 text-xs font-medium mr-2">{error}</span>}
               <button className="btn-ghost text-sm px-4 py-2" onClick={onClose}>Cancel</button>
               <button
