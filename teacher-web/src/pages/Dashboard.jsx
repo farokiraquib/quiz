@@ -213,9 +213,10 @@ export default function Dashboard() {
       roomCode,
       hostSecret,
       questionIndex,
+      totalQuestions: questions.length,
       showLeaderboard: showStudentLeaderboard,
     });
-  }, [roomCode, hostSecret, questionIndex, showStudentLeaderboard]);
+  }, [roomCode, hostSecret, questionIndex, questions.length, showStudentLeaderboard]);
 
   const handleNextQuestion = useCallback(() => {
     const nextIndex = questionIndex + 1;

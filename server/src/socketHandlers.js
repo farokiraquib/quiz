@@ -394,7 +394,10 @@ function registerHandlers(io) {
           showLeaderboard: data.showLeaderboard === true,
         });
 
-        if (room.currentQuestionIndex >= questions.length - 1) {
+        // Use frontend-provided totalQuestions to avoid async race condition with update-questions
+        const total = data.totalQuestions || questions.length;
+
+        if (room.currentQuestionIndex >= total - 1) {
           await setRoomField(data.roomCode, 'status', 'finished');
           io.to(data.roomCode).emit('game:finished', { leaderboard });
           console.log(`[Room ${data.roomCode}] Game finished`);
