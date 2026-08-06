@@ -93,7 +93,8 @@ router.put('/promos/:id/toggle', async (req, res) => {
 // ─── GET /api/admin/live-rooms ───────────────────────────────────────
 router.get('/live-rooms', async (req, res) => {
   try {
-    const activeRooms = await getAllRoomsAdmin();
+    const allRooms = await getAllRoomsAdmin();
+    const activeRooms = allRooms.filter(r => r.status !== 'finished');
     // activeRooms has { code, status, teacherId, players }
     
     // Resolve teacher info for each room
