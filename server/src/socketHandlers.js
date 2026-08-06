@@ -6,6 +6,7 @@ const {
   setRoomField,
   setRoomFields,
   getQuestions,
+  setQuestions,
   addPlayer,
   removePlayer,
   removeRoom,
