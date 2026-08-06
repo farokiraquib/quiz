@@ -410,6 +410,20 @@ function registerHandlers(io) {
       }
     });
 
+    // ─── HOST: UPDATE QUESTIONS ──────────────────────────────────────
+    socket.on('host:update-questions', async (data) => {
+      try {
+        if (!data || !data.roomCode || !data.questions) return;
+        const room = await getRoom(data.roomCode);
+        if (!room || room.hostSocketId !== socket.id) return;
+
+        await setQuestions(data.roomCode, data.questions);
+        console.log(`[Room ${data.roomCode}] Questions updated by host`);
+      } catch (err) {
+        console.error('[host:update-questions] Error:', err);
+      }
+    });
+
     // ─── 6. HOST: NEXT QUESTION ──────────────────────────────────────
     socket.on('host:next-question', async (data) => {
       try {
