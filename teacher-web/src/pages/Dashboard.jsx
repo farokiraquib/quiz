@@ -473,6 +473,7 @@ export default function Dashboard() {
             plan={fullProfile?.plan || 'FREE'}
             roomCode={roomCode}
             onEditQuestions={() => setIsEditingQuestions(true)}
+            totalQuestions={questions.length}
           />
         )}
       </div>

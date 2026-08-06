@@ -26,7 +26,8 @@ export default function Leaderboard({
   onBackHome,
   plan,
   roomCode,
-  onEditQuestions
+  onEditQuestions,
+  totalQuestions
 }) {
 
 
@@ -61,6 +62,9 @@ export default function Leaderboard({
     doc.text(`Room Code: ${roomCode || 'Session'}`, 14, 30);
     doc.text(`Date: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 36);
     doc.text(`Total Students: ${leaderboard.length}`, 14, 42);
+    if (totalQuestions !== undefined) {
+      doc.text(`Total Questions: ${totalQuestions}`, 14, 48);
+    }
     
     // Build table data
     const tableColumn = ["Rank", "Student Name", "Score"];
@@ -169,7 +173,7 @@ export default function Leaderboard({
                 >
                   {/* Rank */}
                   <span className="w-8 text-center text-lg font-black text-white/30">
-                    {player.rank || index + 4}
+                    {player.rank}
                   </span>
                   {/* Name */}
                   <span className="flex-1 font-bold text-base text-white truncate">

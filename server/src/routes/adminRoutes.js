@@ -1,6 +1,6 @@
 const express = require('express');
 const prisma = require('../prisma');
-const { getAllRoomsAdmin } = require('../gameState');
+const { getAllRoomsAdmin, removeRoom } = require('../gameState');
 
 const router = express.Router();
 
@@ -116,6 +116,18 @@ router.get('/live-rooms', async (req, res) => {
     res.json({ success: true, liveRooms: enrichedRooms });
   } catch (err) {
     console.error('[admin:get-live-rooms] Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── DELETE /api/admin/live-rooms/:code ──────────────────────────────
+router.delete('/live-rooms/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    await removeRoom(code);
+    res.json({ success: true, message: `Room ${code} deleted successfully.` });
+  } catch (err) {
+    console.error(`[admin:delete-room] Error deleting room ${req.params.code}:`, err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

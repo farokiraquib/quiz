@@ -66,6 +66,29 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteRoom = async (code) => {
+    const confirmation = prompt('To confirm deletion, please type "delete":');
+    if (confirmation !== 'delete') {
+      alert('Deletion cancelled. You must type exactly "delete".');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${SERVER_URL}/api/admin/live-rooms/${code}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-password': password }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLiveRooms(liveRooms.filter(r => r.code !== code));
+      } else {
+        alert(data.error || 'Failed to delete room');
+      }
+    } catch (err) {
+      alert('Error connecting to server');
+    }
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
     fetchPromos(password);
@@ -318,12 +341,13 @@ export default function Admin() {
                     <th className="p-4 font-semibold text-white/60 text-sm">Host Info</th>
                     <th className="p-4 font-semibold text-white/60 text-sm">Status</th>
                     <th className="p-4 font-semibold text-white/60 text-sm">Students ({liveRooms.reduce((acc, r) => acc + (r.players?.length || 0), 0)})</th>
+                    <th className="p-4 font-semibold text-white/60 text-sm text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {liveRooms.length === 0 ? (
                     <tr>
-                      <td colSpan="4" className="p-8 text-center text-white/40">No live rooms currently.</td>
+                      <td colSpan="5" className="p-8 text-center text-white/40">No live rooms currently.</td>
                     </tr>
                   ) : liveRooms.map(room => (
                     <tr key={room.code} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
@@ -358,6 +382,14 @@ export default function Admin() {
                             <span className="text-sm text-white/30">No students yet</span>
                           )}
                         </div>
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleDeleteRoom(room.code)}
+                          className="text-xs font-bold bg-red-500/20 text-red-400 px-3 py-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"
+                        >
+                          Force Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
