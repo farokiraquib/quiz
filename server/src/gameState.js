@@ -417,6 +417,48 @@ async function getActiveRooms() {
   return activeRooms;
 }
 
+/**
+ * Returns a list of all active rooms with full admin info (players, status, teacher ID).
+ * @returns {Promise<Array<object>>}
+ */
+async function getAllRoomsAdmin() {
+  const redis = await getRedisClient();
+  const rooms = [];
+
+  let cursor = '0';
+  do {
+    const result = await redis.scan(cursor, { MATCH: 'room:*', COUNT: 100 });
+    cursor = String(result.cursor);
+    for (const key of result.keys) {
+      const parts = key.split(':');
+      if (parts.length !== 2) continue;
+
+      const code = parts[1];
+      const data = await redis.hGetAll(key);
+      if (!data || Object.keys(data).length === 0) continue;
+
+      // Get players
+      const rawPlayers = await redis.hGetAll(`room:${code}:players`);
+      const players = [];
+      for (const [socketId, json] of Object.entries(rawPlayers)) {
+        try {
+          const p = JSON.parse(json);
+          players.push(p.name);
+        } catch(e) {}
+      }
+
+      rooms.push({
+        code,
+        status: data.status || 'lobby',
+        teacherId: data.teacherId,
+        players
+      });
+    }
+  } while (cursor !== '0');
+
+  return rooms;
+}
+
 // ─── Answered Set helpers ─────────────────────────────────────────────
 
 /**
@@ -546,6 +588,7 @@ module.exports = {
   removeRoom,
   findRoomBySocket,
   getActiveRooms,
+  getAllRoomsAdmin,
   markAnswered,
   hasAnswered,
   getAnswer,

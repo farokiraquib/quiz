@@ -1,5 +1,6 @@
 const express = require('express');
 const prisma = require('../prisma');
+const { getAllRoomsAdmin } = require('../gameState');
 
 const router = express.Router();
 
@@ -85,6 +86,56 @@ router.put('/promos/:id/toggle', async (req, res) => {
     res.json({ success: true, promo });
   } catch (err) {
     console.error('[admin:toggle-promo] Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── GET /api/admin/live-rooms ───────────────────────────────────────
+router.get('/live-rooms', async (req, res) => {
+  try {
+    const activeRooms = await getAllRoomsAdmin();
+    // activeRooms has { code, status, teacherId, players }
+    
+    // Resolve teacher info for each room
+    const teacherIds = [...new Set(activeRooms.map(r => r.teacherId).filter(Boolean))];
+    const teachers = await prisma.teacher.findMany({
+      where: { id: { in: teacherIds } },
+      select: { id: true, name: true, email: true, plan: true }
+    });
+    
+    const teacherMap = {};
+    teachers.forEach(t => { teacherMap[t.id] = t; });
+    
+    const enrichedRooms = activeRooms.map(r => ({
+      code: r.code,
+      status: r.status,
+      players: r.players,
+      teacher: r.teacherId ? teacherMap[r.teacherId] || null : null
+    }));
+    
+    res.json({ success: true, liveRooms: enrichedRooms });
+  } catch (err) {
+    console.error('[admin:get-live-rooms] Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── GET /api/admin/room-history ─────────────────────────────────────
+router.get('/room-history', async (req, res) => {
+  try {
+    const history = await prisma.roomHistory.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        teacher: {
+          select: { id: true, name: true, email: true, plan: true }
+        }
+      },
+      take: 200 // Limit to recent 200 for performance
+    });
+    
+    res.json({ success: true, history });
+  } catch (err) {
+    console.error('[admin:get-room-history] Error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
