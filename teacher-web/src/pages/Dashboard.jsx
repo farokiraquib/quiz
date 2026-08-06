@@ -205,20 +205,21 @@ export default function Dashboard() {
     });
 
     setScreen('playing');
-  }, [questions, roomCode]);
+  }, [questions, roomCode, hostSecret]);
 
   const handleEndQuestion = useCallback(() => {
     socket.emit('host:end-question', {
       roomCode,
+      hostSecret,
       questionIndex,
       showLeaderboard: showStudentLeaderboard,
     });
-  }, [roomCode, questionIndex, showStudentLeaderboard]);
+  }, [roomCode, hostSecret, questionIndex, showStudentLeaderboard]);
 
   const handleNextQuestion = useCallback(() => {
     const nextIndex = questionIndex + 1;
     if (nextIndex >= questions.length) {
-      socket.emit('host:next-question', { roomCode });
+      socket.emit('host:next-question', { roomCode, hostSecret });
       return;
     }
 
@@ -228,10 +229,10 @@ export default function Dashboard() {
     setAnsweredCount(0);
     setOptionCounts({});
 
-    socket.emit('host:next-question', { roomCode });
+    socket.emit('host:next-question', { roomCode, hostSecret });
 
     setScreen('playing');
-  }, [questionIndex, questions, roomCode]);
+  }, [questionIndex, questions, roomCode, hostSecret]);
 
   const handleLeaveKeepOpen = useCallback(() => {
     setTimeout(() => {
@@ -253,7 +254,7 @@ export default function Dashboard() {
   }, []);
 
   const handleEndGame = useCallback(() => {
-    socket.emit('host:end-game', { roomCode });
+    socket.emit('host:end-game', { roomCode, hostSecret });
     setTimeout(() => {
       if (socket.connected) {
         socket.disconnect();
@@ -272,7 +273,7 @@ export default function Dashboard() {
     setOptionCounts({});
     setLeaderboard([]);
     setIsGameOver(false);
-  }, [roomCode]);
+  }, [roomCode, hostSecret]);
 
   // ── Render ──
   return (

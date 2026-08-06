@@ -254,7 +254,7 @@ function registerHandlers(io) {
 
         const room = await getRoom(data.roomCode);
         if (!room) return;
-        if (room.hostSocketId !== socket.id) return;
+        if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
 
         const [questions] = await Promise.all([
           getQuestions(data.roomCode),
@@ -379,7 +379,7 @@ function registerHandlers(io) {
 
         const room = await getRoom(data.roomCode);
         if (!room) return;
-        if (room.hostSocketId !== socket.id) return;
+        if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
 
         const [questions, leaderboard] = await Promise.all([
           getQuestions(data.roomCode),
@@ -430,7 +430,8 @@ function registerHandlers(io) {
       try {
         if (!data || !data.roomCode || !data.questions) return;
         const room = await getRoom(data.roomCode);
-        if (!room || room.hostSocketId !== socket.id) return;
+        if (!room) return;
+        if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
 
         await setQuestions(data.roomCode, data.questions);
         console.log(`[Room ${data.roomCode}] Questions updated by host`);
@@ -446,7 +447,7 @@ function registerHandlers(io) {
 
         const room = await getRoom(data.roomCode);
         if (!room) return;
-        if (room.hostSocketId !== socket.id) return;
+        if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
 
         const nextIndex = room.currentQuestionIndex + 1;
         const [questions] = await Promise.all([
@@ -513,7 +514,8 @@ function registerHandlers(io) {
       try {
         if (!data || !data.roomCode) return;
         const room = await getRoom(data.roomCode);
-        if (!room || room.hostSocketId !== socket.id) return;
+        if (!room) return;
+        if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
         
         const leaderboard = await buildLeaderboard(data.roomCode);
         io.to(data.roomCode).emit('game:finished', { leaderboard, message: 'The host has ended the game.' });
