@@ -33,6 +33,11 @@ export default function GameControl({
   const [isTimerDone, setIsTimerDone] = useState(false);
   const intervalRef = useRef(null);
 
+  const onEndQuestionRef = useRef(onEndQuestion);
+  useEffect(() => {
+    onEndQuestionRef.current = onEndQuestion;
+  }, [onEndQuestion]);
+
   // Reset timer when question changes
   useEffect(() => {
     const el = (question?.serverStartTime && question?.serverTimeNow) 
@@ -43,11 +48,18 @@ export default function GameControl({
     setTimeLeft(startLeft);
     setIsTimerDone(false);
 
+    if (startLeft <= 0) {
+      setIsTimerDone(true);
+      onEndQuestionRef.current();
+      return;
+    }
+
     intervalRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
           setIsTimerDone(true);
+          onEndQuestionRef.current();
           return 0;
         }
         return prev - 1;
@@ -58,13 +70,6 @@ export default function GameControl({
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [questionIndex, timeLimit, question]);
-
-  // Auto-end question when timer is done
-  useEffect(() => {
-    if (isTimerDone) {
-      onEndQuestion();
-    }
-  }, [isTimerDone, onEndQuestion]);
 
   const timerPercent = (timeLeft / timeLimit) * 100;
   const answerPercent = totalPlayers > 0 ? (answeredCount / totalPlayers) * 100 : 0;
