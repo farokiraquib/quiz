@@ -38,7 +38,7 @@ export default function Lobby({ roomCode, players, onStart, onEndGame }) {
               Waiting Room
             </span>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Join the Quiz at <br/><span className="text-white/60">LiveQuizz.com</span>
+              Join the Quiz at <br/><span className="text-white/60">quiz.pixelkite.in/play</span>
             </h1>
             <p className="text-white/50 mb-12">Ask your students to go to the website and enter the room code below to join.</p>
           </div>

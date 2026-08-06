@@ -55,7 +55,9 @@ export default function QuestionScreen({ question, roomCode, onAnswerSubmitted, 
   };
 
   const submitAnswer = (indices) => {
-    socket.emit('student:submit-answer', { roomCode, answerIndices: indices });
+    const t0 = Date.now();
+    console.log(`[PERF] T0 student-submit: ${t0}`);
+    socket.emit('student:submit-answer', { roomCode, answerIndices: indices, t0 });
     onAnswerSubmitted(indices);
   };
 

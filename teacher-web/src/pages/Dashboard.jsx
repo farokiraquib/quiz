@@ -73,6 +73,13 @@ export default function Dashboard() {
   const [optionCounts, setOptionCounts] = useState({});
   const [isEditingQuestions, setIsEditingQuestions] = useState(false);
 
+  // ── Diagnostic: log when React commits the re-render ──
+  useEffect(() => {
+    if (answeredCount > 0) {
+      console.log(`[PERF] T5 teacher-rendered: ${Date.now()}, answeredCount=${answeredCount}`);
+    }
+  }, [answeredCount]);
+
   // ── Socket Event Handlers ──
 
   // Auto-rejoin on mount
@@ -140,16 +147,16 @@ export default function Dashboard() {
     }, [])
   );
 
-  // Answer received (throttled 50ms for snappier UI)
+  // Answer received — no throttle, real-time is critical
   useSocket(
     'host:player-answered',
     useCallback((data) => {
+      console.log(`[PERF] T4 teacher-receive: ${Date.now()}`);
       setAnsweredCount(data.answeredCount ?? ((prev) => prev + 1));
       if (data.optionCounts) {
         setOptionCounts(data.optionCounts);
       }
-    }, []),
-    50
+    }, [])
   );
 
   // Question result → show leaderboard
