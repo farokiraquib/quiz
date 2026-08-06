@@ -153,7 +153,7 @@ export default function QuestionEditorModal({
             </button>
           </div>
 
-          <div className="p-4 flex-1 md:overflow-y-auto max-h-[25vh] md:max-h-none overflow-y-auto">
+          <div className="p-4 flex-1 min-h-0 md:overflow-y-auto max-h-[25vh] md:max-h-none overflow-y-auto">
             <h2 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3">All Questions</h2>
             <div className="space-y-2">
               {questions.map((questionItem, idx) => {
@@ -200,7 +200,7 @@ export default function QuestionEditorModal({
         </div>
 
         {/* Main Content Editor */}
-        <div className="flex-1 flex flex-col relative md:h-full md:overflow-y-auto">
+        <div className="flex-1 flex flex-col relative min-h-0 md:h-full">
           {/* Top Bar Actions */}
           <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-md border-b border-white/10 p-3 sm:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center flex-wrap gap-2">
