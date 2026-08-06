@@ -234,7 +234,11 @@ export default function Dashboard() {
   }, [questionIndex, questions, roomCode]);
 
   const handleLeaveKeepOpen = useCallback(() => {
-    socket.disconnect();
+    setTimeout(() => {
+      if (socket.connected) {
+        socket.disconnect();
+      }
+    }, 500);
     setScreen('create');
     setRoomCode('');
     setHostSecret('');
@@ -250,7 +254,11 @@ export default function Dashboard() {
 
   const handleEndGame = useCallback(() => {
     socket.emit('host:end-game', { roomCode });
-    socket.disconnect();
+    setTimeout(() => {
+      if (socket.connected) {
+        socket.disconnect();
+      }
+    }, 500);
     localStorage.removeItem('livequizz_room');
     localStorage.removeItem('livequizz_secret');
     setScreen('create');
