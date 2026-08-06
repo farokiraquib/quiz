@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import socket, { SERVER_URL } from '../socket';
 import useSocket from '../hooks/useSocket';
@@ -190,8 +190,15 @@ export default function Dashboard() {
     localStorage.setItem('livequizz_secret', secret);
   }, []);
 
+  const actionLock = useRef(false);
+
   const handleStartQuiz = useCallback(() => {
+    if (actionLock.current) return;
     if (questions.length === 0) return;
+    
+    actionLock.current = true;
+    setTimeout(() => { actionLock.current = false; }, 1000);
+
     const q = questions[0];
     setCurrentQuestion(q);
     setQuestionIndex(0);
@@ -219,9 +226,13 @@ export default function Dashboard() {
   }, [roomCode, hostSecret, questionIndex, questions.length, showStudentLeaderboard]);
 
   const handleNextQuestion = useCallback(() => {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setTimeout(() => { actionLock.current = false; }, 1000);
+
     const nextIndex = questionIndex + 1;
     if (nextIndex >= questions.length) {
-      socket.emit('host:next-question', { roomCode, hostSecret });
+      socket.emit('host:next-question', { roomCode, hostSecret, targetIndex: nextIndex });
       return;
     }
 
@@ -231,7 +242,7 @@ export default function Dashboard() {
     setAnsweredCount(0);
     setOptionCounts({});
 
-    socket.emit('host:next-question', { roomCode, hostSecret });
+    socket.emit('host:next-question', { roomCode, hostSecret, targetIndex: nextIndex });
 
     setScreen('playing');
   }, [questionIndex, questions, roomCode, hostSecret]);

@@ -447,12 +447,18 @@ function registerHandlers(io) {
     socket.on('host:next-question', async (data) => {
       try {
         if (!data || !data.roomCode) return;
-
         const room = await getRoom(data.roomCode);
         if (!room) return;
         if (room.hostSocketId !== socket.id && room.hostSecret !== data.hostSecret) return;
 
         const nextIndex = room.currentQuestionIndex + 1;
+        
+        // Prevent double-click race conditions from skipping questions
+        if (data.targetIndex !== undefined && data.targetIndex !== nextIndex) {
+          console.warn(`[Room ${data.roomCode}] Ignored next-question due to mismatch (target=${data.targetIndex}, next=${nextIndex})`);
+          return;
+        }
+
         const [questions] = await Promise.all([
           getQuestions(data.roomCode),
           setRoomField(data.roomCode, 'currentQuestionIndex', nextIndex)

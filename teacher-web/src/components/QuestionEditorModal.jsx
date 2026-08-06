@@ -136,9 +136,17 @@ export default function QuestionEditorModal({
   const q = questions[qIndex];
   const isPastOrCurrent = qIndex <= questionIndex;
 
+  useEffect(() => {
+    // Prevent body scrolling when modal is open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50">
-      <div className="bg-[#0a0a0a] border-0 sm:border border-white/10 sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl flex flex-col md:flex-row overflow-hidden shadow-2xl animate-scale-up">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 z-50 overscroll-none touch-none">
+      <div className="bg-[#0a0a0a] border-0 sm:border border-white/10 sm:rounded-2xl w-full h-full sm:h-auto sm:max-h-[90vh] max-w-6xl flex flex-col md:flex-row overflow-hidden shadow-2xl animate-scale-up touch-auto">
         
         {/* Sidebar Navigation */}
         <div className="w-full md:w-72 flex flex-col bg-[#050505] border-b md:border-b-0 md:border-r border-white/10 shrink-0">
