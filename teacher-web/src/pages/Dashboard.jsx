@@ -200,6 +200,7 @@ export default function Dashboard() {
 
     socket.emit('host:start-question', {
       roomCode,
+      hostSecret,
       questionIndex: 0,
       question: q,
     });

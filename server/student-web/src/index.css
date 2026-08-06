@@ -98,10 +98,15 @@ body {
   overflow: hidden;
   min-height: 100vh;
   min-height: 100dvh;
-  padding-top: env(safe-area-inset-top, 24px);
-  padding-bottom: env(safe-area-inset-bottom, 24px);
-  padding-left: env(safe-area-inset-left, 24px);
-  padding-right: env(safe-area-inset-right, 24px);
+}
+
+@supports (padding: max(0px)) {
+  .screen {
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+  }
 }
 
 .glass-card {
