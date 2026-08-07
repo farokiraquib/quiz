@@ -1,28 +1,45 @@
 const { io } = require('socket.io-client');
 
-const SERVER_URL = 'http://localhost:3001';
-const ROOM_CODE = process.argv[2]; // Pass the room code as an argument
-const NUM_CLIENTS = 1000;
+// Command line arguments
+const args = process.argv.slice(2);
+const ROOM_CODE = args[0];
+const NUM_CLIENTS = parseInt(args[1]) || 100;
+const SERVER_URL = args[2] || 'http://localhost:3001';
 
 if (!ROOM_CODE) {
-  console.error('Usage: node load_test.js <ROOM_CODE>');
+  console.error('Usage: node load_test.js <ROOM_CODE> [NUM_CLIENTS] [SERVER_URL]');
+  console.error('Example: node load_test.js ABCDEF 500 https://your-render-url.onrender.com');
   process.exit(1);
 }
 
-console.log(`Starting load test with ${NUM_CLIENTS} simulated students on room ${ROOM_CODE}...`);
+console.log(`====================================================`);
+console.log(`🚀 Starting Socket.io Load Test`);
+console.log(`Server URL:   ${SERVER_URL}`);
+console.log(`Room Code:    ${ROOM_CODE}`);
+console.log(`Simulated:    ${NUM_CLIENTS} students`);
+console.log(`====================================================`);
 
 let connectedCount = 0;
 let joinedCount = 0;
 let answeredCount = 0;
+let disconnectCount = 0;
+let errorCount = 0;
+let lastErrorMessage = 'None';
+
 const clients = [];
 
-// Create clients with a small delay to simulate real traffic
+// Stagger connections to avoid overwhelming the OS / Network at once
+const CONNECTION_DELAY = 10; // ms between connections
+
 for (let i = 0; i < NUM_CLIENTS; i++) {
   setTimeout(() => {
     const socket = io(SERVER_URL, {
-      transports: ['websocket'],
-      reconnection: false
+      transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+      reconnection: false,
+      timeout: 10000,
     });
+
+    let joinStart = Date.now();
 
     socket.on('connect', () => {
       connectedCount++;
@@ -30,14 +47,20 @@ for (let i = 0; i < NUM_CLIENTS; i++) {
       // Attempt to join the room
       socket.emit('student:join-room', {
         roomCode: ROOM_CODE,
-        playerName: `Bot_Student_${i}`,
+        playerName: `Bot_${Math.floor(Math.random() * 10000)}_${i}`,
       }, (res) => {
         if (res && res.success) {
           joinedCount++;
         } else {
-          console.error(`Client ${i} failed to join:`, res?.error);
+          errorCount++;
+          lastErrorMessage = res?.error || 'Join rejected (no error message)';
         }
       });
+    });
+
+    socket.on('connect_error', (err) => {
+      errorCount++;
+      lastErrorMessage = `Connection error: ${err.message}`;
     });
 
     socket.on('question:new', (q) => {
@@ -55,15 +78,43 @@ for (let i = 0; i < NUM_CLIENTS; i++) {
       }, thinkTime);
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', (reason) => {
       connectedCount--;
+      disconnectCount++;
     });
 
     clients.push(socket);
-  }, i * 5); // Connect one client every 5ms
+  }, i * CONNECTION_DELAY);
 }
 
 // Status logger
-setInterval(() => {
-  console.log(`[Status] Connected: ${connectedCount} | Joined Room: ${joinedCount} | Answers Submitted: ${answeredCount}`);
+let lastAnsweredCount = 0;
+let maxAps = 0;
+
+const interval = setInterval(() => {
+  const currentAnswered = answeredCount;
+  const aps = (currentAnswered - lastAnsweredCount) / 2; // Divided by 2 because interval is 2s
+  lastAnsweredCount = currentAnswered;
+
+  if (aps > maxAps) {
+    maxAps = aps;
+  }
+
+  console.clear();
+  console.log(`====================================================`);
+  console.log(`🚀 Live Load Test Status`);
+  console.log(`Server URL:   ${SERVER_URL}`);
+  console.log(`Room Code:    ${ROOM_CODE}`);
+  console.log(`Target Users: ${NUM_CLIENTS}`);
+  console.log(`====================================================`);
+  console.log(`🟢 Connected:       ${connectedCount}`);
+  console.log(`✅ Joined Room:     ${joinedCount}`);
+  console.log(`📝 Total Answers:   ${answeredCount}`);
+  console.log(`⚡ Answers/sec:     ${aps.toFixed(1)} (Peak: ${maxAps.toFixed(1)}/s)`);
+  console.log(`❌ Errors:          ${errorCount}`);
+  console.log(`🔌 Disconnected:    ${disconnectCount}`);
+  console.log(`⚠️ Last Error:      ${lastErrorMessage}`);
+  console.log(`====================================================`);
+  console.log(`Waiting for teacher to start quiz / next question...`);
+  console.log(`Press Ctrl+C to stop the test.`);
 }, 2000);

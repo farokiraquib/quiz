@@ -1,21 +1,21 @@
 const PLAN_LIMITS = {
   STARTER: {
-    maxStudentsPerRoom: 50,
+    maxStudentsPerRoom: 5000,
     maxQuizzesPerMonth: 2, // Quizzes means Rooms
     hasCsvExport: false,
   },
   SEMESTER_PASS: {
-    maxStudentsPerRoom: 150,
+    maxStudentsPerRoom: 5000,
     maxQuizzesPerMonth: -1, // Unlimited
     hasCsvExport: true,
   },
   ANNUAL_PRO: {
-    maxStudentsPerRoom: 150,
+    maxStudentsPerRoom: 5000,
     maxQuizzesPerMonth: -1,
     hasCsvExport: true,
   },
   INSTITUTE: {
-    maxStudentsPerRoom: 500,
+    maxStudentsPerRoom: 5000,
     maxQuizzesPerMonth: -1,
     hasCsvExport: true,
   }
